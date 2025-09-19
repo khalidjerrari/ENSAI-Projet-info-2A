@@ -138,23 +138,16 @@
         <mxCell id="g0rAqRnPbwVaa7txAOL7-72" value="" style="ellipse;" vertex="1" parent="1">
           <mxGeometry x="200" y="20" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="g0rAqRnPbwVaa7txAOL7-203" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g0rAqRnPbwVaa7txAOL7-73">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="163" y="147.0666666666666" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="306" y="122" />
-              <mxPoint x="220" y="122" />
-              <mxPoint x="220" y="147" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="g0rAqRnPbwVaa7txAOL7-220" value="retour" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="g0rAqRnPbwVaa7txAOL7-203">
-          <mxGeometry x="0.589" y="-2" relative="1" as="geometry">
-            <mxPoint y="-7" as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="g0rAqRnPbwVaa7txAOL7-231" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="g0rAqRnPbwVaa7txAOL7-73" target="g0rAqRnPbwVaa7txAOL7-228">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g0rAqRnPbwVaa7txAOL7-268" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="g0rAqRnPbwVaa7txAOL7-73" target="g0rAqRnPbwVaa7txAOL7-263">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g0rAqRnPbwVaa7txAOL7-269" value="retour" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="g0rAqRnPbwVaa7txAOL7-268">
+          <mxGeometry x="-0.7955" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="g0rAqRnPbwVaa7txAOL7-73" value="Description de l&#39;événement sélectionné" style="shape=mxgraph.uml25.action;html=1;align=center;verticalAlign=middle;absoluteArcSize=1;arcSize=10;dashed=0;spacingLeft=10;flipH=1;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="250" y="187" width="110" height="40" as="geometry" />

@@ -466,17 +466,17 @@
             <mxRectangle width="171" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="5gYkicxAZJYEm7UIIAIP-66" value="" style="endArrow=none;html=1;rounded=0;entryX=-0.022;entryY=0.38;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1.028;exitY=-0.067;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="Z9PIzFJbxG3ZZXLmLnRf-2">
+        <mxCell id="5gYkicxAZJYEm7UIIAIP-66" value="" style="endArrow=none;html=1;rounded=0;entryX=-0.022;entryY=0.38;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.994;exitY=0.188;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="Z9PIzFJbxG3ZZXLmLnRf-1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="463" y="360" as="sourcePoint" />
-            <mxPoint x="632.9079999999999" y="359" as="targetPoint" />
+            <mxPoint x="444.96000000000004" y="359.07000000000005" as="sourcePoint" />
+            <mxPoint x="632.9079999999999" y="358" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="5gYkicxAZJYEm7UIIAIP-68" value="1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" connectable="0" vertex="1" parent="1">
-          <mxGeometry x="480" y="360" as="geometry" />
+          <mxGeometry x="620" y="360" as="geometry" />
         </mxCell>
         <mxCell id="5gYkicxAZJYEm7UIIAIP-69" value="0..n" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="1">
-          <mxGeometry x="609" y="360" as="geometry" />
+          <mxGeometry x="441" y="360" as="geometry" />
         </mxCell>
         <mxCell id="Z9PIzFJbxG3ZZXLmLnRf-1" value="Bus" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;whiteSpace=wrap;" parent="1" vertex="1">
           <mxGeometry x="261" y="331" width="180" height="170" as="geometry" />
@@ -551,6 +551,9 @@
         </mxCell>
         <mxCell id="5gYkicxAZJYEm7UIIAIP-102" value="Concerne" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="1">
           <mxGeometry x="580" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="5gYkicxAZJYEm7UIIAIP-103" value="Réserve" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="1">
+          <mxGeometry x="520" y="360" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

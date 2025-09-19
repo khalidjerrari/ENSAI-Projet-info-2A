@@ -152,11 +152,6 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="g0rAqRnPbwVaa7txAOL7-145" value="consulter" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="g0rAqRnPbwVaa7txAOL7-59">
-          <mxGeometry x="-0.2585" relative="1" as="geometry">
-            <mxPoint y="-8" as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="g0rAqRnPbwVaa7txAOL7-63" value="" style="shape=sumEllipse;perimeter=ellipsePerimeter;html=1;backgroundOutline=1;" vertex="1" parent="1">
           <mxGeometry x="350" y="566" width="30" height="30" as="geometry" />
         </mxCell>

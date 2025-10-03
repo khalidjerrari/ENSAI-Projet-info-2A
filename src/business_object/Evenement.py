@@ -84,3 +84,37 @@ class Evenement:
         self.prixBase = prixBase
         self.prixSam = prixSam
         self.prixAdherent = prixAdherent
+
+    def placesRestantes(self, administrateur):
+            """
+            Calcule le nombre de places restantes pour cet événement.
+
+            Parameters:
+            -----------
+            administrateur : Administrateur
+                L'administrateur dont on va récupérer la liste des inscrits via `listerInscrit`.
+
+            Returns:
+            --------
+            int
+                Le nombre de places restantes (capacite - nombre d'inscrits).
+            """
+            inscrits = administrateur.listerInscrit(self.id_event)
+            return self.capacite - len(inscrits)
+
+    def est_complet(self, administrateur):
+        """
+        Indique si l'événement est complet.
+
+        Parameters:
+        -----------
+        administrateur : Administrateur
+            L'administrateur dont on va récupérer la liste des inscrits via `listerInscrit`.
+
+        Returns:
+        --------
+        bool
+            True si l'événement est complet, False sinon.
+        """
+        return self.places_restantes(administrateur) <= 0
+        

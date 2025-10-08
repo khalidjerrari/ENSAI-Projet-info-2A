@@ -16,9 +16,9 @@ class Utilisateur(ABC):
         
         Returns:
         -------
-            liste_events : liste de tous les événements dont le statut est "en_ligne"
+            liste_events : liste de tous les événements
         """
-        #listeEvents fait appel à listerEventsDAO qui elle sera une requête SQL (a mettre dans evenementS dao)
+        #listeEvents fait appel à listerEventsDAO qui elle sera une requête SQL (à mettre dans evenements dao)
 
     def consulterEvenementsOuverts(self):
         """
@@ -55,11 +55,17 @@ class Utilisateur(ABC):
 
         Parameters
         ----------
-            [...]
+            event : un événement de la classe Evenement
+            aller : horaire du bus pour aller à l'événement
+            retour : horaire du bus pour le retour (qui part de l'événement)
+            boit : booléen, qui indique si le participant boit ou pas
+            sam : booléen, qui indique si le participant est sam : il vient avec sa voiture, ne boit pas d'alcool et ramène des personnes avec
+                    sa voiture.
+            adhérent : booléen, qui indique si le participant est adhérent au BDE (change le prix de l'événement)
         
         Returns
         -------
-            [...]
+            Rien
 
         """
         
@@ -68,6 +74,7 @@ class Utilisateur(ABC):
     
     @abstractmethod
     def modifierReservation(codeReservation : str, nouvelAller: CreneauBus, nouveauRetour: CreneauBus, boit : bool) :
+        pass
 
 
 

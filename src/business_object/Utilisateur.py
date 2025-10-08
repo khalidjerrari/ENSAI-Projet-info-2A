@@ -18,7 +18,7 @@ class Utilisateur(ABC):
         -------
             liste_events : liste de tous les événements dont le statut est "en_ligne"
         """
-        #listeEvents fait appel à listerEventsDAO qui elle sera une requête SQL
+        #listeEvents fait appel à listerEventsDAO qui elle sera une requête SQL (a mettre dans evenementS dao)
 
     def consulterEvenementsOuverts(self):
         """

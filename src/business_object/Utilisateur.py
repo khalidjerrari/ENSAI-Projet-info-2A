@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from Evenement import Evenement
+from EvenementDAO import EvenementDAO
 
 
 class Utilisateur(ABC):
@@ -12,42 +12,28 @@ class Utilisateur(ABC):
 
     def listerEvents(self) :
         """
-        Liste de tous les évènements quelque soit le status
+        Liste de tous les évènements quelque soit le status. On utilise ici la classe "EvenementDAO"
+        car c'est elle qui fait le lien avec la base de données. 
         
         Returns:
         -------
             liste_events : liste de tous les événements
         """
-        #listeEvents fait appel à listerEventsDAO qui elle sera une requête SQL (à mettre dans evenements dao)
+        eventDAO = EvenementDAO()
+        liste_events = eventDAO.find_all(limit=limit, offset=offset)
+        return liste_events
 
     def consulterEvenementsOuverts(self):
         """
         Un utilisateur doit pouvoir consulter tous les événements mis en ligne
         
-        Parameters
-        ----------
-            [...]
-        
         Returns
         -------
-            [...]
+            events_ouverts : liste d'évènements qui sont consultables en ligne
         """
         liste_events = listerEvents(self)
-        events_ouverts = [e for e in liste_events if event.statut == "en_ligne"] #Faire un tri pour que le statut soit "en_ligne". SQL?
+        events_ouverts = [e for e in liste_events if eventDAO.statut == "en_ligne"]
         return events_ouverts
-        
-    def listerMesReservations(self):
-        """
-        Un utilisateur a accès à toutes les réservations qu'il a réalisées
-
-        Parameters
-        ----------
-            [...]
-        
-        Returns 
-        -------
-            [...]
-        """
 
     def reserver(self, event: Evenement, aller: CreneauBus, retour: CreneauBus, boit: bool, sam : bool, adherent : bool):
         """
@@ -67,6 +53,19 @@ class Utilisateur(ABC):
         -------
             Rien
 
+        """
+    
+    def listerMesReservations(self):
+        """
+        Un utilisateur a accès à toutes les réservations qu'il a réalisées
+
+        Parameters
+        ----------
+            [...]
+        
+        Returns 
+        -------
+            [...]
         """
         
     def seDesinscrire(codeReservation : str):

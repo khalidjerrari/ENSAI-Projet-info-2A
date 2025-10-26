@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from EvenementDAO import EvenementDAO
+from EvenementDao import EvenementDao
 
 
 class Utilisateur(ABC):
@@ -19,7 +19,7 @@ class Utilisateur(ABC):
         -------
             liste_events : liste de tous les événements
         """
-        eventDAO = EvenementDAO()
+        eventDAO = EvenementDao()
         liste_events = eventDAO.find_all(limit=limit, offset=offset)
         return liste_events
 
@@ -67,6 +67,10 @@ class Utilisateur(ABC):
         -------
             [...]
         """
+        resaDAO = ReservationDAO()
+        liste_resa = resaDAO.find_by_user(limit=limit, offset=offset)
+        return liste_resaDAO
+        
         
     def seDesinscrire(codeReservation : str):
     

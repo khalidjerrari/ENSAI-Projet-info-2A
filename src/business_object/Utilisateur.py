@@ -57,15 +57,11 @@ class Utilisateur(ABC):
     
     def listerMesReservations(self):
         """
-        Un utilisateur a accès à toutes les réservations qu'il a réalisées
-
-        Parameters
-        ----------
-            [...]
+        Un utilisateur a accès à toutes les réservations qu'il a réalisées pour lui.
         
         Returns 
         -------
-            [...]
+            liste_resaDAO : liste des réservations faites par l'utilisateur
         """
         resaDAO = ReservationDAO()
         liste_resa = resaDAO.find_by_user(limit=limit, offset=offset)
@@ -73,6 +69,18 @@ class Utilisateur(ABC):
         
         
     def seDesinscrire(codeReservation : str):
+        """
+        Un utilisateur doit pouvoir se désinscrire d'un événement quelque soit la raison.
+        Cela entraînera une annulation de sa réservation.
+
+        Parameters :
+        ------------
+            codeReservation : chaîne de caractères qui identifient chaque réservation
+            de façon unique.
+        
+        Return :
+        --------
+            Un mail de confirmation ??
     
     
     @abstractmethod

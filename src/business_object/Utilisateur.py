@@ -10,7 +10,7 @@ class Utilisateur(ABC):
         self.numeroTel = numeroTel
         self.motDePasse = motDePasse
 
-    def listerEvents(self) :
+    def listerEvents(self):
         """
         Liste de tous les évènements quelque soit le status. On utilise ici la classe "EvenementDAO"
         car c'est elle qui fait le lien avec la base de données. 
@@ -35,7 +35,7 @@ class Utilisateur(ABC):
         events_ouverts = [e for e in liste_events if eventDAO.statut == "en_ligne"]
         return events_ouverts
 
-    def reserver(self, event: Evenement, aller: CreneauBus, retour: CreneauBus, boit: bool, sam : bool, adherent : bool):
+    def reserver(self, event: Evenement, aller: CreneauBus, retour: CreneauBus, boit: bool, sam : bool, adherent : bool) -> Reservation:
         """
         Un utilisateur doit pouvoir réserver une ou plusieurs places à un événement
 
@@ -51,10 +51,41 @@ class Utilisateur(ABC):
         
         Returns
         -------
-            Rien
-
+            Reservation
+                L'objet Reservation qui vient d'être créé et sauvegardé.
         """
-    
+        resDAO = ReservationDao()
+        
+        # --- 1. Logique métier : Vérification des places ---
+        if event.places_restantes() <= 0:
+            raise Exception("Désolé, l'événement est complet.")
+        if aller.places_restantes() <= 0:
+            raise Exception(f"Désolé, le créneau '{aller.description}' est complet.")
+        if retour.places_restantes() <= 0:
+            raise Exception(f"Désolé, le créneau '{retour.description}' est complet.")
+
+        # --- 2. Préparation : Création de l'objet Réservation ---
+        code_genere = str(uuid.uuid4())[:8].upper()
+
+        nouvelle_res = Reservation(
+            cree_par=self,
+            code_reservation=code_genere,
+            email_contact=self.email,
+            prenom_contact=self.prenom,
+            nom_contact=self.nom,
+            numero_tel=self.numero_tel,
+            boit=boit,
+            creneau_aller=aller,
+            creneau_retour=retour,
+            sam=sam,
+            adherent=adherent,
+            evenement_associe=event
+        )
+        # --- 3. Persistence : Sauvegarde via le DAO ---
+        res_creee = resDAO.create(nouvelle_res)
+        # --- 4. Post-action (ex: Email) ---
+        return res_creee
+
     def listerMesReservations(self):
         """
         Un utilisateur a accès à toutes les réservations qu'il a réalisées pour lui.
@@ -66,23 +97,29 @@ class Utilisateur(ABC):
         resaDAO = ReservationDAO()
         liste_resa = resaDAO.find_by_user(limit=limit, offset=offset)
         return liste_resaDAO
-        
-        
-    def seDesinscrire(codeReservation : str):
+           
+    def seDesinscrire(codeReservation : str) -> None:
         """
         Un utilisateur doit pouvoir se désinscrire d'un événement quelque soit la raison.
         Cela entraînera une annulation de sa réservation.
 
         Parameters :
         ------------
-            codeReservation : chaîne de caractères qui identifient chaque réservation
-            de façon unique.
-        
-        Return :
-        --------
-            Un mail de confirmation ??
-    
-    
+            codeReservation : str
+                Le code unique de la réservation à annuler.
+        """
+    resDAO = ReservationDao()
+    # --- 1. Vérification : Trouver la réservation ---
+    resa = resDAO.find_by_code(code_reservation)
+    if resa is None:
+        raise Exception("Réservation non trouvée.")
+    # --- 2. Logique métier : Vérifier les droits ---
+    if resa.cree_par.id_utilisateur != self.id_utilisateur:
+        raise Exception("Vous n'êtes pas autorisé à annuler cette réservation.")
+    # --- 3. Persistence : Suppression via le DAO ---
+    resDAO.delete(resa)
+    # --- 4. Post-action (ex: Email) ---
+
     @abstractmethod
     def modifierReservation(codeReservation : str, nouvelAller: CreneauBus, nouveauRetour: CreneauBus, boit : bool) :
         pass

@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 from EvenementDao import EvenementDao
+from ReservationDAO import ReservationDAO
 
 
 class Utilisateur(ABC):
-    def __init__(self, email: str, prenom: str, nom: str, numeroTel : str, motDePasse: str) :
+    """
+    Cette classe permet de définir et d'identifier un utilisateur, qu'il soit administrateur 
+    ou participant.
+    """
+    def __init__(self, email: str, prenom: str, nom: str, numeroTel: str, motDePasse: str) :
         self.email = email
         self.prenom = prenom
         self.nom = nom
@@ -20,7 +25,7 @@ class Utilisateur(ABC):
             liste_events : liste de tous les événements
         """
         eventDAO = EvenementDao()
-        liste_events = eventDAO.find_all(limit=limit, offset=offset)
+        liste_events = eventDAO.find_all()
         return liste_events
 
     def consulterEvenementsOuverts(self):
@@ -95,7 +100,7 @@ class Utilisateur(ABC):
             liste_resaDAO : liste des réservations faites par l'utilisateur
         """
         resaDAO = ReservationDAO()
-        liste_resa = resaDAO.find_by_user(limit=limit, offset=offset)
+        liste_resa = resaDAO.find_by_user()
         return liste_resaDAO
            
     def seDesinscrire(codeReservation : str) -> None:

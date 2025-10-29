@@ -1,10 +1,14 @@
 from utilisateur import Utilisateur
 
 class Administrateur(Utilisateur):
+    """
+    Cette classe de définir un administrateur, qui est un utilisateur avec certains accès 
+    en plus que n'a pas le participant.
+    """
     def __init__(self, id_utilisateur, email, prenom, nom, numeroTel, mot_de_passe, niveau_acces):
         super().__init__(self, id_utilisateur, email, prenom, nom, numeroTel, mot_de_passe, niveau_acces)
 
-    def creerEvenement(self, titre, description, prix_base, supboisson)-> Evenement:
+    def creerEvenement(self, titre, description, prix_base, supboisson) -> Evenement:
         """
         Crée un nouvel événement dans le système.
         L'événement est créé en 'brouillon' par défaut.

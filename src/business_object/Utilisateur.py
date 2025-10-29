@@ -101,7 +101,7 @@ class Utilisateur(ABC):
         """
         resaDAO = ReservationDAO()
         liste_resa = resaDAO.find_by_user()
-        return liste_resaDAO
+        return liste_resa
            
     def seDesinscrire(codeReservation : str) -> None:
         """

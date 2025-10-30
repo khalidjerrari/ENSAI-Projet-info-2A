@@ -24,12 +24,14 @@ def send_email_brevo(to_email, subject, message_text):
 if __name__ == "__main__":
     load_dotenv()
 
+"""
     # Exemple d’utilisation
     status, response = send_email_brevo(
         to_email="projet.shotgun@gmail.com",
         subject="Hello depuis Brevo",
         message_text="Voici un email envoyé avec l'API de Brevo en Python !"
     )
+"""
 
     print("Statut :", status)
     print("Réponse :", response)

@@ -136,22 +136,16 @@ class Utilisateur(ABC):
     # --- 3. Persistence : Suppression via le DAO ---
     resDAO.delete(resa)
     # --- 4. Post-action (ex: Email) ---
-    """
-    ICI il manque la vérification que l'utilisateur est bien fait une réservation car il ne 
-    peut pas annuler ce qu'il n'a pas réservé. 
-    """
-    subject = f"Annulation de votre réservation pour {self.evenement}"
+    subject = f"Annulation de votre réservation pour {self.event}"
     message = (
             f"Bonjour {self.utilisateur.nom},\n\n"
-            f"Votre réservation pour l'événement '{self.evenement}' a bien été annulée ❌.\n"
+            f"Votre réservation pour l'événement '{self.event}' a bien été annulée.\n"
             "Nous espérons vous revoir bientôt à un autre événement !\n\n"
             "— L’équipe du BDE Ensai"
             )
 
         status, response = send_email_brevo(self.utilisateur.email, subject, message)
         print("Email d’annulation envoyé :", status, response)
-    #else:
-        #print("Impossible d’annuler : aucune réservation confirmée.")
 
     @abstractmethod
     def modifierReservation(codeReservation : str, nouvelAller: CreneauBus, nouveauRetour: CreneauBus, boit : bool) :

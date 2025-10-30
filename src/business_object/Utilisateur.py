@@ -24,7 +24,7 @@ class Utilisateur(ABC):
         -------
             liste_events : liste de tous les événements
         """
-        eventDAO = EvenementDao()
+        eventDAO = EvenementDAO()
         liste_events = eventDAO.find_all()
         return liste_events
 
@@ -59,7 +59,7 @@ class Utilisateur(ABC):
             Reservation
                 L'objet Reservation qui vient d'être créé et sauvegardé.
         """
-        resDAO = ReservationDao()
+        resDAO = ReservationDAO()
         
         # --- 1. Logique métier : Vérification des places ---
         if event.places_restantes() <= 0:
@@ -89,7 +89,19 @@ class Utilisateur(ABC):
         # --- 3. Persistence : Sauvegarde via le DAO ---
         res_creee = resDAO.create(nouvelle_res)
         # --- 4. Post-action (ex: Email) ---
-        return res_creee
+        subject = f"Confirmation de votre réservation pour {self.event}"
+        message = (
+            f"Bonjour {self.utilisateur.nom},\n\n"
+            f"Votre réservation pour l'événement '{self.event}' a bien été confirmée.\n"
+            "Merci de votre confiance et à très bientôt !\n\n"
+            "— L’équipe du BDE Ensai"
+            )
+
+            status, response = send_email_brevo(self.utilisateur.email, subject, message)
+            print("Email de confirmation envoyé :", status, response)
+        else:
+            print("Réservation déjà confirmée.")
+
 
     def listerMesReservations(self):
         """
@@ -124,6 +136,22 @@ class Utilisateur(ABC):
     # --- 3. Persistence : Suppression via le DAO ---
     resDAO.delete(resa)
     # --- 4. Post-action (ex: Email) ---
+    """
+    ICI il manque la vérification que l'utilisateur est bien fait une réservation car il ne 
+    peut pas annuler ce qu'il n'a pas réservé. 
+    """
+    subject = f"Annulation de votre réservation pour {self.evenement}"
+    message = (
+            f"Bonjour {self.utilisateur.nom},\n\n"
+            f"Votre réservation pour l'événement '{self.evenement}' a bien été annulée ❌.\n"
+            "Nous espérons vous revoir bientôt à un autre événement !\n\n"
+            "— L’équipe du BDE Ensai"
+            )
+
+        status, response = send_email_brevo(self.utilisateur.email, subject, message)
+        print("Email d’annulation envoyé :", status, response)
+    #else:
+        #print("Impossible d’annuler : aucune réservation confirmée.")
 
     @abstractmethod
     def modifierReservation(codeReservation : str, nouvelAller: CreneauBus, nouveauRetour: CreneauBus, boit : bool) :

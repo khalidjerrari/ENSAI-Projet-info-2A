@@ -8,7 +8,7 @@ from utils.log_decorator import log
 from utils.singleton import Singleton
 from dao.db_connection import DBConnection
 
-from service.joueur_service import JoueurService
+#from service.joueur_service import JoueurService
 
 
 class ResetDatabase(metaclass=Singleton):
@@ -24,11 +24,13 @@ class ResetDatabase(metaclass=Singleton):
             mock.patch.dict(os.environ, {"POSTGRES_SCHEMA": "projet_test_dao"}).start()
             pop_data_path = "data/pop_db_test.sql"
         else:
+            os.environ["POSTGRES_SCHEMA"] = "projet_dao"
             pop_data_path = "data/pop_db.sql"
 
         dotenv.load_dotenv()
 
         schema = os.environ["POSTGRES_SCHEMA"]
+        print(schema)
 
         create_schema = f"DROP SCHEMA IF EXISTS {schema} CASCADE; CREATE SCHEMA {schema};"
 
@@ -43,21 +45,28 @@ class ResetDatabase(metaclass=Singleton):
         try:
             with DBConnection().connection as connection:
                 with connection.cursor() as cursor:
+                    print(connection)
+                    # if test_dao:
+                        # print(create_schema)
+                        # print(init_db_as_string)
+                        # print(pop_db_as_string)
                     cursor.execute(create_schema)
                     cursor.execute(init_db_as_string)
                     cursor.execute(pop_db_as_string)
+                del connection
+                print("Done")
         except Exception as e:
             logging.info(e)
             raise
 
-        # Appliquer le hashage des mots de passe à chaque joueur
-        joueur_service = JoueurService()
-        for j in joueur_service.lister_tous(inclure_mdp=True):
-            joueur_service.modifier(j)
+        # # Appliquer le hashage des mots de passe à chaque joueur
+        # joueur_service = JoueurService()
+        # for j in joueur_service.lister_tous(inclure_mdp=True):
+        #     joueur_service.modifier(j)
 
-        return True
+        # return True
 
 
 if __name__ == "__main__":
-    ResetDatabase().lancer()
+    ResetDatabase().lancer(False)
     ResetDatabase().lancer(True)

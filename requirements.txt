@@ -1,2 +1,17 @@
 requests
 python-dotenv
+coverage
+inquirerPy
+fastapi
+psycopg2-binary
+pylint
+pytest
+python-dotenv
+PyYAML
+regex
+requests
+tabulate
+uvicorn
+logging
+logging.config
+dotenv

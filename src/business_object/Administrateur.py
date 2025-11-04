@@ -141,3 +141,4 @@ class Administrateur(Utilisateur):
         )
         
         return stats_finales
+        

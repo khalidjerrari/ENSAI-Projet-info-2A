@@ -1,8 +1,6 @@
-INSERT INTO joueur(pseudo, mdp, age, mail, fan_pokemon) VALUES
-('admin',      '0000',     0,       'admin@projet.fr',      null),
-('a',             'a',     20,      'a@ensai.fr',           true),
-('maurice',    '1234',     20,      'maurice@ensai.fr',     true),
-('batricia',   '9876',     25,      'bat@projet.fr',        false),
-('miguel',     'abcd',     23,      'miguel@projet.fr',     true),
-('gilbert',    'toto',     21,      'gilbert@projet.fr',    false),
-('junior',     'aaaa',     15,      'junior@projet.fr',     true);
+INSERT INTO utilisateur (nom, prenom, telephone, email, mot_de_passe, administrateur)
+VALUES
+('Dupont', 'Alice', '0601020304', 'alice.dupont@email.com', 'mdpAlice123', FALSE),
+('Martin', 'Bob', '0605060708', 'bob.martin@email.com', 'mdpBob123', TRUE),
+('Durand', 'Caroline', '0608091011', 'caroline.durand@email.com', 'mdpCaroline123', FALSE),
+('Petit', 'David', '0611121314', 'david.petit@email.com', 'mdpDavid123', FALSE);

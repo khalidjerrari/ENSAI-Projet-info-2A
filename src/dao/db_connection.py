@@ -15,13 +15,15 @@ class DBConnection(metaclass=Singleton):
     def __init__(self):
         """Ouverture de la connexion"""
         dotenv.load_dotenv()
-
+        print("coucou")
+        print(os.environ['POSTGRES_SCHEMA'])
+        print("coucou2")
         self.__connection = psycopg2.connect(
-            host=os.environ["postgresql-66551.user-khalid76"],
-            port=os.environ["9876"],
-            database=os.environ["defaultdb"],
-            user=os.environ["user-khalid76"],
-            password=os.environ["9dyhflppaxy1jz0urk4e"],
+            host=os.environ["POSTGRES_HOST"],
+            port=os.environ["POSTGRES_PORT"],
+            database=os.environ["POSTGRES_DATABASE"],
+            user=os.environ["POSTGRES_USER"],
+            password=os.environ["POSTGRES_PASSWORD"],
             options=f"-c search_path={os.environ['POSTGRES_SCHEMA']}",
             cursor_factory=RealDictCursor,
         )

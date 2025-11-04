@@ -1,13 +1,8 @@
 -----------------------------------------------------
--- SCHEMA
------------------------------------------------------
-DROP SCHEMA IF EXISTS bd_projet_info CASCADE;
-CREATE SCHEMA bd_projet_info;
-SET search_path = bd_projet_info;
-
------------------------------------------------------
 -- TABLE : Utilisateur
 -----------------------------------------------------
+
+DROP TABLE IF EXISTS utilisateur CASCADE;
 CREATE TABLE utilisateur (
     id_utilisateur SERIAL PRIMARY KEY,
     nom VARCHAR(50) NOT NULL,
@@ -22,6 +17,8 @@ CREATE TABLE utilisateur (
 -----------------------------------------------------
 -- TABLE : Bus
 -----------------------------------------------------
+
+DROP TABLE IF EXISTS bus CASCADE;
 CREATE TABLE bus (
     id_bus SERIAL PRIMARY KEY,
     matricule VARCHAR(50) UNIQUE NOT NULL,
@@ -31,6 +28,8 @@ CREATE TABLE bus (
 -----------------------------------------------------
 -- TABLE : Transport
 -----------------------------------------------------
+
+DROP TABLE IF EXISTS transport CASCADE;
 CREATE TABLE transport (
     id_transport SERIAL PRIMARY KEY,
     fk_bus INT NOT NULL REFERENCES bus(id_bus) ON DELETE CASCADE,
@@ -43,6 +42,8 @@ CREATE TABLE transport (
 -----------------------------------------------------
 -- TABLE : Événement
 -----------------------------------------------------
+
+DROP TABLE IF EXISTS evenement CASCADE;
 CREATE TABLE evenement (
     id_evenement SERIAL PRIMARY KEY,
     fk_transport INT NOT NULL REFERENCES transport(id_transport) ON DELETE CASCADE,
@@ -54,7 +55,7 @@ CREATE TABLE evenement (
     description TEXT,
     capacite INT NOT NULL,
     date_creation TIMESTAMP DEFAULT NOW(),
-    categorie VARCHAR(50)
+    categorie VARCHAR(50),
     statut VARCHAR(50) DEFAULT 'pas encore finalisé'
         CHECK (statut IN ('disponible en ligne', 'déjà réalisé', 'annulé', 'pas encore finalisé'))
 );
@@ -63,6 +64,8 @@ CREATE TABLE evenement (
 -----------------------------------------------------
 -- TABLE : Réservation
 -----------------------------------------------------
+
+DROP TABLE IF EXISTS reservation CASCADE;
 CREATE TABLE reservation (
     id_reservation SERIAL PRIMARY KEY,
     fk_utilisateur INT NOT NULL REFERENCES utilisateur(id_utilisateur) ON DELETE CASCADE,
@@ -78,6 +81,8 @@ CREATE TABLE reservation (
 -----------------------------------------------------
 -- TABLE : Commentaire
 -----------------------------------------------------
+
+DROP TABLE IF EXISTS commentaire CASCADE;
 CREATE TABLE commentaire (
     id_commentaire SERIAL PRIMARY KEY,                  
     fk_reservation INT NOT NULL                         

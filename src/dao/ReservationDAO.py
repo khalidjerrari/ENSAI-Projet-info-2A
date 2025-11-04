@@ -4,7 +4,7 @@ from dao.connection_manager import ConnectionManager
 from models.reservation_models import ReservationModelOut
 
 
-class ReservationDAO:
+class ReservationDao:
     """
     DAO pour la gestion des réservations (table 'reservation')
     """

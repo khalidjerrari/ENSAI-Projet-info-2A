@@ -45,7 +45,8 @@ class AccueilVue(VueAbstraite):
                 return InscriptionVue("Création de compte joueur")
 
             case "Consulter les événements":  # Je sais pas comment on fait ça
-                return AccueilVue(Session().afficher())
+                from view.consulter.consulter_vue import ConsulterVue
+                return ConsulterVue()
 
             case "Ré-initialiser la base de données":  # On garde ça ??
                 succes = ResetDatabase().lancer()

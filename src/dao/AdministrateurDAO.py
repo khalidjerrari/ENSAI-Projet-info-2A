@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 import bcrypt
 
-from dao.connection_manager import ConnectionManager
+from dao.db_connection import DBConnection
 from models.utilisateur_models import AdministrateurModelOut, AdministrateurModelIn
 
 
@@ -48,7 +48,7 @@ class AdministrateurDao:
         )
         params = {"limit": max(limit, 0), "offset": max(offset, 0)}
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 results = curs.fetchall()
@@ -77,7 +77,7 @@ class AdministrateurDao:
             "FROM utilisateur "
             "WHERE id_utilisateur = %(id)s AND administrateur = TRUE"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
                 res = curs.fetchone()
@@ -104,7 +104,7 @@ class AdministrateurDao:
             "FROM utilisateur "
             "WHERE email = %(email)s AND administrateur = TRUE"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"email": email})
                 res = curs.fetchone()
@@ -142,7 +142,7 @@ class AdministrateurDao:
             "mot_de_passe": self._hash_password(admin_in.mot_de_passe),
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 row = curs.fetchone()
@@ -183,7 +183,7 @@ class AdministrateurDao:
             "telephone": admin_out.telephone,
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 res = curs.fetchone()
@@ -208,7 +208,7 @@ class AdministrateurDao:
         Supprime un administrateur par ID.
         """
         query = "DELETE FROM utilisateur WHERE id_utilisateur = %(id)s AND administrateur = TRUE"
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
                 return curs.rowcount > 0
@@ -223,7 +223,7 @@ class AdministrateurDao:
             "SELECT id_utilisateur, email, prenom, nom, telephone, mot_de_passe, administrateur, date_creation "
             "FROM utilisateur WHERE email = %(email)s AND administrateur = TRUE"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"email": email})
                 res = curs.fetchone()
@@ -254,7 +254,7 @@ class AdministrateurDao:
         )
         params = {"pwd": self._hash_password(new_password), "id": id_utilisateur}
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 return curs.rowcount > 0

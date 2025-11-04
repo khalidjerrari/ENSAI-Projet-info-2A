@@ -1,6 +1,6 @@
 # dao/evenement_dao.py
 from typing import List, Optional
-from dao.connection_manager import ConnectionManager
+from dao.db_connection import DBConnection
 from models.evenement_models import EvenementModelOut, EvenementModelIn
 
 
@@ -38,7 +38,7 @@ class EvenementDao:
         )
         params = {"limit": max(limit, 0), "offset": max(offset, 0)}
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
@@ -73,7 +73,7 @@ class EvenementDao:
             "FROM evenement "
             "WHERE id_evenement = %(id)s"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_evenement})
                 r = curs.fetchone()
@@ -114,7 +114,7 @@ class EvenementDao:
             "offset": max(offset, 0),
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
@@ -163,7 +163,7 @@ class EvenementDao:
             "statut": evenement_in.statut,
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 row = curs.fetchone()
@@ -222,7 +222,7 @@ class EvenementDao:
             "statut": evenement.statut,
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 r = curs.fetchone()
@@ -252,7 +252,7 @@ class EvenementDao:
         Supprime un événement par son ID.
         """
         query = "DELETE FROM evenement WHERE id_evenement = %(id)s"
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_evenement})
                 return curs.rowcount > 0

@@ -2,7 +2,7 @@
 from typing import List, Optional
 import bcrypt
 
-from dao.connection_manager import ConnectionManager
+from dao.db_connection import DBConnection
 from models.participant_models import ParticipantModelIn, ParticipantModelOut
 
 
@@ -44,7 +44,7 @@ class ParticipantDao:
         )
         params = {"limit": max(limit, 0), "offset": max(offset, 0)}
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
@@ -73,7 +73,7 @@ class ParticipantDao:
             "FROM utilisateur "
             "WHERE id_utilisateur = %(id)s AND administrateur = FALSE"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
                 r = curs.fetchone()
@@ -100,7 +100,7 @@ class ParticipantDao:
             "FROM utilisateur "
             "WHERE email = %(email)s AND administrateur = FALSE"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"email": email})
                 r = curs.fetchone()
@@ -137,7 +137,7 @@ class ParticipantDao:
             "mot_de_passe": self._hash_password(participant_in.mot_de_passe),
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 row = curs.fetchone()
@@ -177,7 +177,7 @@ class ParticipantDao:
             "telephone": participant_out.telephone,
         }
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 r = curs.fetchone()
@@ -201,7 +201,7 @@ class ParticipantDao:
         Supprime un participant par son ID.
         """
         query = "DELETE FROM utilisateur WHERE id_utilisateur = %(id)s AND administrateur = FALSE"
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
                 return curs.rowcount > 0
@@ -216,7 +216,7 @@ class ParticipantDao:
             "FROM utilisateur "
             "WHERE email = %(email)s AND administrateur = FALSE"
         )
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"email": email})
                 r = curs.fetchone()
@@ -244,7 +244,7 @@ class ParticipantDao:
         )
         params = {"pwd": self._hash_password(new_password), "id": id_utilisateur}
 
-        with ConnectionManager().getConnexion() as con:
+        with DBConnection().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 return curs.rowcount > 0

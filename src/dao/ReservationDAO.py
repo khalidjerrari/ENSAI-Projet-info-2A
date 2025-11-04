@@ -1,6 +1,6 @@
 # dao/reservation_dao.py
 from typing import List
-from dao.connection_manager import ConnectionManager
+from dao.db_connection import DBConnection
 from models.reservation_models import ReservationModelOut
 
 
@@ -33,7 +33,7 @@ class ReservationDao:
             "ORDER BY r.date_reservation DESC"
         )
 
-        with ConnectionManager().getConnexion() as connection:
+        with DBConnection().getConnexion() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, (id_utilisateur,))
                 results = cursor.fetchall()

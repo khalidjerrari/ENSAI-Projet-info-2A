@@ -23,10 +23,9 @@ class AccueilVue(VueAbstraite):
         choix = inquirer.select(
             message="Faites votre choix : ",
             choices=[
-                "Se connecter",
                 "Créer un compte",
-                "Ré-initialiser la base de données",  # on garde ça?
-                "Infos de session",
+                "Se connecter",
+                "Consulter les événements",
                 "Quitter",
             ],
         ).execute()
@@ -45,10 +44,10 @@ class AccueilVue(VueAbstraite):
 
                 return InscriptionVue("Création de compte joueur")
 
-            case "Infos de session":
+            case "Consulter les événements":  # Je sais pas comment on fait ça
                 return AccueilVue(Session().afficher())
 
-            case "Ré-initialiser la base de données":
+            case "Ré-initialiser la base de données":  # On garde ça ??
                 succes = ResetDatabase().lancer()
                 message = (
                     f"Ré-initilisation de la base de données - {'SUCCES' if succes else 'ECHEC'}"

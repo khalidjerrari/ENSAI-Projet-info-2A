@@ -31,7 +31,8 @@ if __name__ == "__main__":
         subject="Hello depuis Brevo",
         message_text="Voici un email envoyé avec l'API de Brevo en Python !"
     )
-"""
+
 
     print("Statut :", status)
     print("Réponse :", response)
+"""

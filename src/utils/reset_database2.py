@@ -26,10 +26,10 @@ class ResetDatabase(metaclass=Singleton):
         dotenv.load_dotenv()
 
         if test_dao:
-            schema = "projet_test_dao2"
+            schema = "projet_test_dao"
             pop_data_path = "data/pop_db_test.sql"
         else:
-            schema = "projet_dao2"
+            schema = "projet_dao"
             pop_data_path = "data/pop_db.sql"
 
         # On utilise un patch temporaire du dictionnaire os.environ

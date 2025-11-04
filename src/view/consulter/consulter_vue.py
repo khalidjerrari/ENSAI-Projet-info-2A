@@ -1,9 +1,3 @@
-import os
-import sys
-
-# Ajoute automatiquement le dossier parent (src/) au PYTHONPATH
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
 # view/consulter/consulter_vue.py
 from typing import Optional
 from view.vue_abstraite import VueAbstraite
@@ -34,7 +28,7 @@ class ConsulterVue(VueAbstraite):
             events = self.dao.lister_tous(limit=50)
             self._afficher_events(events)
             input("\n(Entrée) pour continuer...")
-            return self  # ✅ rester sur la même vue
+            return self  # rester sur la même vue
 
         elif choix == "2":
             events = self.dao.lister_disponibles(limit=50, a_partir_du=date.today())

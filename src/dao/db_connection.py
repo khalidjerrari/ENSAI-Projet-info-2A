@@ -1,33 +1,40 @@
 import os
 import dotenv
 import psycopg2
-
 from psycopg2.extras import RealDictCursor
+
 from utils.singleton import Singleton
 
 
 class DBConnection(metaclass=Singleton):
     """
-    Classe de connexion à la base de données
-    Elle permet de n'ouvrir qu'une seule et unique connexion
+    Classe gérant une unique connexion à la base PostgreSQL.
+    Utilise le patron Singleton pour éviter plusieurs connexions simultanées.
     """
 
     def __init__(self):
-        """Ouverture de la connexion"""
-        dotenv.load_dotenv()
-        print("coucou")
-        print(os.environ['POSTGRES_SCHEMA'])
-        print("coucou2")
-        self.__connection = psycopg2.connect(
-            host=os.environ["POSTGRES_HOST"],
-            port=os.environ["POSTGRES_PORT"],
-            database=os.environ["POSTGRES_DATABASE"],
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            options=f"-c search_path={os.environ['POSTGRES_SCHEMA']}",
-            cursor_factory=RealDictCursor,
-        )
+        """Initialise la connexion à la base de données."""
+        dotenv.load_dotenv()  # charge le fichier .env
+        try:
+            self.__connection = psycopg2.connect(
+                host=os.getenv("POSTGRES_HOST"),
+                port=os.getenv("POSTGRES_PORT"),
+                database=os.getenv("POSTGRES_DATABASE"),
+                user=os.getenv("POSTGRES_USER"),
+                password=os.getenv("POSTGRES_PASSWORD"),
+                options=f"-c search_path={os.getenv('POSTGRES_SCHEMA')}",
+                cursor_factory=RealDictCursor,
+            )
+            print(f"✅ Connexion réussie au schéma : {os.getenv('POSTGRES_SCHEMA')}")
+        except Exception as e:
+            print("❌ Erreur de connexion à la base de données :", e)
+            raise
 
     @property
     def connection(self):
+        """Retourne la connexion PostgreSQL active."""
+        return self.__connection
+
+    def getConnexion(self):
+        """Alias pour compatibilité."""
         return self.__connection

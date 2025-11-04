@@ -117,11 +117,3 @@ def test_authentificate():
 
     # THEN
     assert isinstance(utilisateur, Utilisateur)
-
-
-
-
-
-
-
-

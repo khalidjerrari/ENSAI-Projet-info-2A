@@ -9,9 +9,12 @@ from models.utilisateur_models import AdministrateurModelOut, AdministrateurMode
 
 class AdministrateurDao:
     """
-    DAO pour la gestion des administrateurs dans la base de données.
-    Stockage dans la table 'utilisateur' (ou 'utilisateurs') avec la colonne type='ADMIN'.
-    Le mot de passe est stocké hashé (bcrypt).
+    DAO pour la gestion des administrateurs.
+    Basé sur la table 'utilisateur' du schéma fourni :
+      id_utilisateur SERIAL PK
+      nom, prenom, telephone, email (UNIQUE), mot_de_passe (hash), administrateur BOOLEAN, date_creation TIMESTAMP
+    Un administrateur est une ligne avec administrateur = TRUE.
+    Les mots de passe sont stockés hashés (bcrypt).
     """
 
     # ---------- Helpers mot de passe ----------
@@ -37,15 +40,17 @@ class AdministrateurDao:
         Récupère une liste paginée d'administrateurs.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE type = 'ADMIN' "
+            "WHERE administrateur = TRUE "
             "ORDER BY id_utilisateur "
-            f"LIMIT {max(limit,0)} OFFSET {max(offset,0)}"
+            "LIMIT %(limit)s OFFSET %(offset)s"
         )
+        params = {"limit": max(limit, 0), "offset": max(offset, 0)}
+
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
-                curs.execute(query)
+                curs.execute(query, params)
                 results = curs.fetchall()
 
         admins: List[AdministrateurModelOut] = []
@@ -56,9 +61,8 @@ class AdministrateurDao:
                     email=res["email"],
                     prenom=res["prenom"],
                     nom=res["nom"],
-                    numero_tel=res["numero_tel"],
-                    niveau_acces=res["niveau_acces"],
-                    type=res["type"],
+                    telephone=res["telephone"],
+                    administrateur=res["administrateur"],
                     date_creation=res["date_creation"],
                 )
             )
@@ -69,9 +73,9 @@ class AdministrateurDao:
         Récupère un administrateur par son ID.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE id_utilisateur = %(id)s AND type = 'ADMIN'"
+            "WHERE id_utilisateur = %(id)s AND administrateur = TRUE"
         )
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
@@ -86,9 +90,8 @@ class AdministrateurDao:
             email=res["email"],
             prenom=res["prenom"],
             nom=res["nom"],
-            numero_tel=res["numero_tel"],
-            niveau_acces=res["niveau_acces"],
-            type=res["type"],
+            telephone=res["telephone"],
+            administrateur=res["administrateur"],
             date_creation=res["date_creation"],
         )
 
@@ -97,9 +100,9 @@ class AdministrateurDao:
         Récupère un administrateur par email.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE email = %(email)s AND type = 'ADMIN'"
+            "WHERE email = %(email)s AND administrateur = TRUE"
         )
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
@@ -114,9 +117,8 @@ class AdministrateurDao:
             email=res["email"],
             prenom=res["prenom"],
             nom=res["nom"],
-            numero_tel=res["numero_tel"],
-            niveau_acces=res["niveau_acces"],
-            type=res["type"],
+            telephone=res["telephone"],
+            administrateur=res["administrateur"],
             date_creation=res["date_creation"],
         )
 
@@ -124,39 +126,35 @@ class AdministrateurDao:
 
     def create(self, admin_in: AdministrateurModelIn) -> AdministrateurModelOut:
         """
-        Crée un nouvel administrateur.
+        Crée un nouvel administrateur (administrateur=TRUE).
         admin_in.mot_de_passe est hashé avant insertion.
         """
         query = (
-            "INSERT INTO utilisateur (email, prenom, nom, numero_tel, mot_de_passe, niveau_acces, type, date_creation) "
-            "VALUES (%(email)s, %(prenom)s, %(nom)s, %(numero_tel)s, %(mot_de_passe)s, %(niveau_acces)s, 'ADMIN', %(date_creation)s) "
-            "RETURNING id_utilisateur"
+            "INSERT INTO utilisateur (email, prenom, nom, telephone, mot_de_passe, administrateur) "
+            "VALUES (%(email)s, %(prenom)s, %(nom)s, %(telephone)s, %(mot_de_passe)s, TRUE) "
+            "RETURNING id_utilisateur, date_creation"
         )
-        now = datetime.now()
         params = {
             "email": admin_in.email,
             "prenom": admin_in.prenom,
             "nom": admin_in.nom,
-            "numero_tel": admin_in.numero_tel,
+            "telephone": admin_in.telephone,
             "mot_de_passe": self._hash_password(admin_in.mot_de_passe),
-            "niveau_acces": admin_in.niveau_acces,
-            "date_creation": now,
         }
 
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
-                new_id = curs.fetchone()["id_utilisateur"]
+                row = curs.fetchone()
 
         return AdministrateurModelOut(
-            id_utilisateur=new_id,
+            id_utilisateur=row["id_utilisateur"],
             email=admin_in.email,
             prenom=admin_in.prenom,
             nom=admin_in.nom,
-            numero_tel=admin_in.numero_tel,
-            niveau_acces=admin_in.niveau_acces,
-            type="ADMIN",
-            date_creation=now,
+            telephone=admin_in.telephone,
+            administrateur=True,
+            date_creation=row["date_creation"],
         )
 
     # ---------- UPDATE ----------
@@ -171,21 +169,18 @@ class AdministrateurDao:
             "   email = %(email)s, "
             "   prenom = %(prenom)s, "
             "   nom = %(nom)s, "
-            "   numero_tel = %(numero_tel)s, "
-            "   niveau_acces = %(niveau_acces)s "
-            " WHERE id_utilisateur = %(id)s AND type = 'ADMIN' "
-            " RETURNING * "
+            "   telephone = %(telephone)s "
+            " WHERE id_utilisateur = %(id)s AND administrateur = TRUE "
+            " RETURNING id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             ") "
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
-            "FROM updated"
+            "SELECT * FROM updated"
         )
         params = {
             "id": admin_out.id_utilisateur,
             "email": admin_out.email,
             "prenom": admin_out.prenom,
             "nom": admin_out.nom,
-            "numero_tel": admin_out.numero_tel,
-            "niveau_acces": admin_out.niveau_acces,
+            "telephone": admin_out.telephone,
         }
 
         with ConnectionManager().getConnexion() as con:
@@ -201,9 +196,8 @@ class AdministrateurDao:
             email=res["email"],
             prenom=res["prenom"],
             nom=res["nom"],
-            numero_tel=res["numero_tel"],
-            niveau_acces=res["niveau_acces"],
-            type=res["type"],
+            telephone=res["telephone"],
+            administrateur=res["administrateur"],
             date_creation=res["date_creation"],
         )
 
@@ -213,7 +207,7 @@ class AdministrateurDao:
         """
         Supprime un administrateur par ID.
         """
-        query = "DELETE FROM utilisateur WHERE id_utilisateur = %(id)s AND type = 'ADMIN'"
+        query = "DELETE FROM utilisateur WHERE id_utilisateur = %(id)s AND administrateur = TRUE"
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
@@ -225,10 +219,9 @@ class AdministrateurDao:
         """
         Vérifie les identifiants et retourne l'admin si OK, sinon None.
         """
-        # On doit lire le hash du mot de passe pour comparer
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, mot_de_passe, niveau_acces, type, date_creation "
-            "FROM utilisateur WHERE email = %(email)s AND type = 'ADMIN'"
+            "SELECT id_utilisateur, email, prenom, nom, telephone, mot_de_passe, administrateur, date_creation "
+            "FROM utilisateur WHERE email = %(email)s AND administrateur = TRUE"
         )
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
@@ -246,9 +239,8 @@ class AdministrateurDao:
             email=res["email"],
             prenom=res["prenom"],
             nom=res["nom"],
-            numero_tel=res["numero_tel"],
-            niveau_acces=res["niveau_acces"],
-            type=res["type"],
+            telephone=res["telephone"],
+            administrateur=res["administrateur"],
             date_creation=res["date_creation"],
         )
 
@@ -258,7 +250,7 @@ class AdministrateurDao:
         """
         query = (
             "UPDATE utilisateur SET mot_de_passe = %(pwd)s "
-            "WHERE id_utilisateur = %(id)s AND type = 'ADMIN'"
+            "WHERE id_utilisateur = %(id)s AND administrateur = TRUE"
         )
         params = {"pwd": self._hash_password(new_password), "id": id_utilisateur}
 

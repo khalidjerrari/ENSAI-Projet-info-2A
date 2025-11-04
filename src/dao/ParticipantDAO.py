@@ -1,6 +1,5 @@
 # dao/participant_dao.py
 from typing import List, Optional
-from datetime import datetime
 import bcrypt
 
 from dao.connection_manager import ConnectionManager
@@ -9,16 +8,14 @@ from models.participant_models import ParticipantModelIn, ParticipantModelOut
 
 class ParticipantDao:
     """
-    DAO pour la gestion des participants dans la base de données.
-
-    Table supposée : 'utilisateur'
-    Colonnes :
-        id_utilisateur (PK), email (unique), prenom, nom,
-        numero_tel, mot_de_passe, niveau_acces, type ('PARTICIPANT'),
-        date_creation
+    DAO pour la gestion des participants (utilisateur.administrateur = FALSE).
+    Table 'utilisateur' (schéma fourni) :
+      id_utilisateur SERIAL PK
+      nom, prenom, telephone, email (UNIQUE)
+      mot_de_passe (hash), administrateur BOOLEAN, date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     """
 
-    # ---------- Helpers pour le mot de passe ----------
+    # ---------- Helpers mot de passe ----------
     @staticmethod
     def _hash_password(plain: str) -> str:
         if isinstance(plain, str):
@@ -33,22 +30,23 @@ class ParticipantDao:
             hashed = hashed.encode("utf-8")
         return bcrypt.checkpw(plain, hashed)
 
-    # ---------- CRUD ----------
+    # ---------- READ ----------
     def find_all(self, limit: int = 100, offset: int = 0) -> List[ParticipantModelOut]:
         """
         Récupère une liste paginée de participants.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE type = 'PARTICIPANT' "
+            "WHERE administrateur = FALSE "
             "ORDER BY id_utilisateur "
-            f"LIMIT {max(limit, 0)} OFFSET {max(offset, 0)}"
+            "LIMIT %(limit)s OFFSET %(offset)s"
         )
+        params = {"limit": max(limit, 0), "offset": max(offset, 0)}
 
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
-                curs.execute(query)
+                curs.execute(query, params)
                 rows = curs.fetchall()
 
         participants: List[ParticipantModelOut] = []
@@ -59,9 +57,8 @@ class ParticipantDao:
                     email=r["email"],
                     prenom=r["prenom"],
                     nom=r["nom"],
-                    numero_tel=r["numero_tel"],
-                    niveau_acces=r["niveau_acces"],
-                    type=r["type"],
+                    telephone=r["telephone"],
+                    administrateur=r["administrateur"],
                     date_creation=r["date_creation"],
                 )
             )
@@ -72,11 +69,10 @@ class ParticipantDao:
         Récupère un participant par ID.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE id_utilisateur = %(id)s AND type = 'PARTICIPANT'"
+            "WHERE id_utilisateur = %(id)s AND administrateur = FALSE"
         )
-
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
@@ -90,9 +86,8 @@ class ParticipantDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            niveau_acces=r["niveau_acces"],
-            type=r["type"],
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
@@ -101,11 +96,10 @@ class ParticipantDao:
         Récupère un participant par email.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE email = %(email)s AND type = 'PARTICIPANT'"
+            "WHERE email = %(email)s AND administrateur = FALSE"
         )
-
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"email": email})
@@ -119,52 +113,49 @@ class ParticipantDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            niveau_acces=r["niveau_acces"],
-            type=r["type"],
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
+    # ---------- CREATE ----------
     def create(self, participant_in: ParticipantModelIn) -> ParticipantModelOut:
         """
-        Crée un nouveau participant dans la base de données.
+        Crée un nouveau participant (administrateur=FALSE).
+        Laisse la BDD remplir date_creation (DEFAULT CURRENT_TIMESTAMP).
         """
         query = (
-            "INSERT INTO utilisateur (email, prenom, nom, numero_tel, mot_de_passe, niveau_acces, type, date_creation) "
-            "VALUES (%(email)s, %(prenom)s, %(nom)s, %(numero_tel)s, %(mot_de_passe)s, %(niveau_acces)s, 'PARTICIPANT', %(date_creation)s) "
-            "RETURNING id_utilisateur"
+            "INSERT INTO utilisateur (email, prenom, nom, telephone, mot_de_passe, administrateur) "
+            "VALUES (%(email)s, %(prenom)s, %(nom)s, %(telephone)s, %(mot_de_passe)s, FALSE) "
+            "RETURNING id_utilisateur, date_creation"
         )
-
-        now = datetime.now()
         params = {
             "email": participant_in.email,
             "prenom": participant_in.prenom,
             "nom": participant_in.nom,
-            "numero_tel": participant_in.numero_tel,
+            "telephone": participant_in.telephone,
             "mot_de_passe": self._hash_password(participant_in.mot_de_passe),
-            "niveau_acces": participant_in.niveau_acces,
-            "date_creation": now,
         }
 
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
-                new_id = curs.fetchone()["id_utilisateur"]
+                row = curs.fetchone()
 
         return ParticipantModelOut(
-            id_utilisateur=new_id,
+            id_utilisateur=row["id_utilisateur"],
             email=participant_in.email,
             prenom=participant_in.prenom,
             nom=participant_in.nom,
-            numero_tel=participant_in.numero_tel,
-            niveau_acces=participant_in.niveau_acces,
-            type="PARTICIPANT",
-            date_creation=now,
+            telephone=participant_in.telephone,
+            administrateur=False,
+            date_creation=row["date_creation"],
         )
 
+    # ---------- UPDATE ----------
     def update(self, participant_out: ParticipantModelOut) -> Optional[ParticipantModelOut]:
         """
-        Met à jour les informations d’un participant.
+        Met à jour les informations d’un participant (hors mot de passe).
         """
         query = (
             "WITH updated AS ("
@@ -172,22 +163,18 @@ class ParticipantDao:
             "    email = %(email)s, "
             "    prenom = %(prenom)s, "
             "    nom = %(nom)s, "
-            "    numero_tel = %(numero_tel)s, "
-            "    niveau_acces = %(niveau_acces)s "
-            "  WHERE id_utilisateur = %(id)s AND type = 'PARTICIPANT' "
-            "  RETURNING *"
+            "    telephone = %(telephone)s "
+            "  WHERE id_utilisateur = %(id)s AND administrateur = FALSE "
+            "  RETURNING id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation"
             ") "
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, niveau_acces, type, date_creation "
-            "FROM updated"
+            "SELECT * FROM updated"
         )
-
         params = {
             "id": participant_out.id_utilisateur,
             "email": participant_out.email,
             "prenom": participant_out.prenom,
             "nom": participant_out.nom,
-            "numero_tel": participant_out.numero_tel,
-            "niveau_acces": participant_out.niveau_acces,
+            "telephone": participant_out.telephone,
         }
 
         with ConnectionManager().getConnexion() as con:
@@ -203,34 +190,32 @@ class ParticipantDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            niveau_acces=r["niveau_acces"],
-            type=r["type"],
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
+    # ---------- DELETE ----------
     def delete(self, id_utilisateur: int) -> bool:
         """
         Supprime un participant par son ID.
         """
-        query = "DELETE FROM utilisateur WHERE id_utilisateur = %(id)s AND type = 'PARTICIPANT'"
-
+        query = "DELETE FROM utilisateur WHERE id_utilisateur = %(id)s AND administrateur = FALSE"
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"id": id_utilisateur})
                 return curs.rowcount > 0
 
-    # ---------- AUTH / PASSWORD ----------
+    # ---------- AUTH ----------
     def authenticate(self, email: str, mot_de_passe: str) -> Optional[ParticipantModelOut]:
         """
-        Authentifie un participant via son email et son mot de passe.
+        Authentifie un participant par email/mot de passe.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, mot_de_passe, niveau_acces, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, mot_de_passe, administrateur, date_creation "
             "FROM utilisateur "
-            "WHERE email = %(email)s AND type = 'PARTICIPANT'"
+            "WHERE email = %(email)s AND administrateur = FALSE"
         )
-
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, {"email": email})
@@ -244,9 +229,8 @@ class ParticipantDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            niveau_acces=r["niveau_acces"],
-            type=r["type"],
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
@@ -256,9 +240,8 @@ class ParticipantDao:
         """
         query = (
             "UPDATE utilisateur SET mot_de_passe = %(pwd)s "
-            "WHERE id_utilisateur = %(id)s AND type = 'PARTICIPANT'"
+            "WHERE id_utilisateur = %(id)s AND administrateur = FALSE"
         )
-
         params = {"pwd": self._hash_password(new_password), "id": id_utilisateur}
 
         with ConnectionManager().getConnexion() as con:

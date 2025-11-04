@@ -1,6 +1,5 @@
 # dao/utilisateur_dao.py
 from typing import List, Optional
-from datetime import datetime
 import bcrypt
 
 from dao.connection_manager import ConnectionManager
@@ -10,9 +9,10 @@ from models.utilisateur_models import UtilisateurModelIn, UtilisateurModelOut
 class UtilisateurDao:
     """
     DAO pour la gestion des utilisateurs.
-    Table supposée : 'utilisateur' avec au minimum :
-      id_utilisateur (PK), email (unique), prenom, nom, numero_tel,
-      mot_de_passe (hash bcrypt), date_creation, type (optionnel : 'USER' par défaut).
+    Table 'utilisateur' (schéma fourni) :
+      id_utilisateur SERIAL PK
+      nom, prenom, telephone, email (UNIQUE)
+      mot_de_passe (hash), administrateur BOOLEAN, date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     """
 
     # ---------- Helpers mot de passe ----------
@@ -36,14 +36,16 @@ class UtilisateurDao:
         Récupère une liste paginée d'utilisateurs.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
             "ORDER BY id_utilisateur "
-            f"LIMIT {max(limit,0)} OFFSET {max(offset,0)}"
+            "LIMIT %(limit)s OFFSET %(offset)s"
         )
+        params = {"limit": max(limit, 0), "offset": max(offset, 0)}
+
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
-                curs.execute(query)
+                curs.execute(query, params)
                 results = curs.fetchall()
 
         users: List[UtilisateurModelOut] = []
@@ -54,8 +56,8 @@ class UtilisateurDao:
                     email=r["email"],
                     prenom=r["prenom"],
                     nom=r["nom"],
-                    numero_tel=r["numero_tel"],
-                    type=r.get("type", "USER"),
+                    telephone=r["telephone"],
+                    administrateur=r["administrateur"],
                     date_creation=r["date_creation"],
                 )
             )
@@ -66,7 +68,7 @@ class UtilisateurDao:
         Récupère un utilisateur par son ID.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
             "WHERE id_utilisateur = %(id)s"
         )
@@ -83,8 +85,8 @@ class UtilisateurDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            type=r.get("type", "USER"),
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
@@ -93,7 +95,7 @@ class UtilisateurDao:
         Récupère un utilisateur par son email.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation "
             "FROM utilisateur "
             "WHERE email = %(email)s"
         )
@@ -110,8 +112,8 @@ class UtilisateurDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            type=r.get("type", "USER"),
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
@@ -119,36 +121,35 @@ class UtilisateurDao:
     def create(self, user_in: UtilisateurModelIn) -> UtilisateurModelOut:
         """
         Crée un nouvel utilisateur (hash le mot de passe).
+        Laisse la BDD remplir date_creation (DEFAULT CURRENT_TIMESTAMP).
         """
         query = (
-            "INSERT INTO utilisateur (email, prenom, nom, numero_tel, mot_de_passe, type, date_creation) "
-            "VALUES (%(email)s, %(prenom)s, %(nom)s, %(numero_tel)s, %(mot_de_passe)s, %(type)s, %(date_creation)s) "
-            "RETURNING id_utilisateur"
+            "INSERT INTO utilisateur (email, prenom, nom, telephone, mot_de_passe, administrateur) "
+            "VALUES (%(email)s, %(prenom)s, %(nom)s, %(telephone)s, %(mot_de_passe)s, %(administrateur)s) "
+            "RETURNING id_utilisateur, date_creation"
         )
-        now = datetime.now()
         params = {
             "email": user_in.email,
             "prenom": user_in.prenom,
             "nom": user_in.nom,
-            "numero_tel": user_in.numero_tel,
+            "telephone": user_in.telephone,
             "mot_de_passe": self._hash_password(user_in.mot_de_passe),
-            "type": getattr(user_in, "type", "USER"),
-            "date_creation": now,
+            "administrateur": getattr(user_in, "administrateur", False),
         }
 
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
-                new_id = curs.fetchone()["id_utilisateur"]
+                row = curs.fetchone()
 
         return UtilisateurModelOut(
-            id_utilisateur=new_id,
+            id_utilisateur=row["id_utilisateur"],
             email=user_in.email,
             prenom=user_in.prenom,
             nom=user_in.nom,
-            numero_tel=user_in.numero_tel,
-            type=params["type"],
-            date_creation=now,
+            telephone=user_in.telephone,
+            administrateur=params["administrateur"],
+            date_creation=row["date_creation"],
         )
 
     # ---------- UPDATE ----------
@@ -162,21 +163,20 @@ class UtilisateurDao:
             "    email = %(email)s, "
             "    prenom = %(prenom)s, "
             "    nom = %(nom)s, "
-            "    numero_tel = %(numero_tel)s, "
-            "    type = %(type)s "
+            "    telephone = %(telephone)s, "
+            "    administrateur = %(administrateur)s "
             "  WHERE id_utilisateur = %(id)s "
-            "  RETURNING *"
+            "  RETURNING id_utilisateur, email, prenom, nom, telephone, administrateur, date_creation"
             ") "
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, type, date_creation "
-            "FROM updated"
+            "SELECT * FROM updated"
         )
         params = {
             "id": user_out.id_utilisateur,
             "email": user_out.email,
             "prenom": user_out.prenom,
             "nom": user_out.nom,
-            "numero_tel": user_out.numero_tel,
-            "type": getattr(user_out, "type", "USER"),
+            "telephone": user_out.telephone,
+            "administrateur": getattr(user_out, "administrateur", False),
         }
 
         with ConnectionManager().getConnexion() as con:
@@ -192,8 +192,8 @@ class UtilisateurDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            type=r.get("type", "USER"),
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 
@@ -214,7 +214,7 @@ class UtilisateurDao:
         Vérifie email/mot de passe et retourne l'utilisateur si OK.
         """
         query = (
-            "SELECT id_utilisateur, email, prenom, nom, numero_tel, mot_de_passe, type, date_creation "
+            "SELECT id_utilisateur, email, prenom, nom, telephone, mot_de_passe, administrateur, date_creation "
             "FROM utilisateur "
             "WHERE email = %(email)s"
         )
@@ -234,8 +234,8 @@ class UtilisateurDao:
             email=r["email"],
             prenom=r["prenom"],
             nom=r["nom"],
-            numero_tel=r["numero_tel"],
-            type=r.get("type", "USER"),
+            telephone=r["telephone"],
+            administrateur=r["administrateur"],
             date_creation=r["date_creation"],
         )
 

@@ -1,205 +1,258 @@
+# dao/evenement_dao.py
 from typing import List, Optional
-from datetime import datetime
 from dao.connection_manager import ConnectionManager
 from models.evenement_models import EvenementModelOut, EvenementModelIn
 
 
 class EvenementDao:
     """
-    DAO pour la gestion des événements dans la base de données.
+    DAO pour la gestion des événements (schéma conforme à la table 'evenement').
+
+    Colonnes en base :
+      id_evenement SERIAL PK
+      fk_transport INT NOT NULL
+      fk_utilisateur INT NULL
+      titre VARCHAR(150) NOT NULL
+      adresse VARCHAR(255) NULL
+      ville VARCHAR(100) NULL
+      date_evenement DATE NOT NULL
+      description TEXT NULL
+      capacite INT NOT NULL
+      date_creation TIMESTAMP DEFAULT NOW()
+      categorie VARCHAR(50) NULL
+      statut VARCHAR(50) DEFAULT 'pas encore finalisé'
     """
+
+    # ---------- READ ----------
 
     def find_all(self, limit: int = 100, offset: int = 0) -> List[EvenementModelOut]:
         """
         Récupère une liste paginée d'événements.
-
-        Args:
-            limit (int): nombre maximum d'événements retournés.
-            offset (int): nombre d'événements à sauter pour la pagination.
-
-        Returns:
-            List[EvenementModelOut]: liste d'événements.
         """
         query = (
-            "SELECT id_event, titre, description, categorie, statut, capacite, prix_base, prix_sam, prix_adherent, "
-            "id_admin_createur, date_creation "
+            "SELECT id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "       date_evenement, description, capacite, categorie, statut, date_creation "
             "FROM evenement "
-            "ORDER BY id_event "
-            f"LIMIT {max(limit,0)} OFFSET {max(offset,0)}"
+            "ORDER BY id_evenement "
+            "LIMIT %(limit)s OFFSET %(offset)s"
         )
+        params = {"limit": max(limit, 0), "offset": max(offset, 0)}
+
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
-                curs.execute(query)
-                results = curs.fetchall()
+                curs.execute(query, params)
+                rows = curs.fetchall()
 
-        evenements = []
-        for res in results:
-            event = EvenementModelOut(
-                id_event=res["id_event"],
-                titre=res["titre"],
-                description=res["description"],
-                categorie=res["categorie"],
-                statut=res["statut"],
-                capacite=res["capacite"],
-                prixBase=res["prix_base"],
-                prixSam=res["prix_sam"],
-                prixAdherent=res["prix_adherent"],
-                creerPar_id=res["id_admin_createur"],
-                date_creation=res["date_creation"]
+        events: List[EvenementModelOut] = []
+        for r in rows:
+            events.append(
+                EvenementModelOut(
+                    id_evenement=r["id_evenement"],
+                    fk_transport=r["fk_transport"],
+                    fk_utilisateur=r["fk_utilisateur"],
+                    titre=r["titre"],
+                    adresse=r["adresse"],
+                    ville=r["ville"],
+                    date_evenement=r["date_evenement"],
+                    description=r["description"],
+                    capacite=r["capacite"],
+                    categorie=r["categorie"],
+                    statut=r["statut"],
+                    date_creation=r["date_creation"],
+                )
             )
-            evenements.append(event)
-        return evenements
+        return events
 
-    def find_by_id(self, id_event: int) -> Optional[EvenementModelOut]:
+    def find_by_id(self, id_evenement: int) -> Optional[EvenementModelOut]:
         """
         Récupère un événement par son ID.
-
-        Args:
-            id_event (int): Identifiant de l'événement.
-
-        Returns:
-            EvenementModelOut | None: événement si trouvé, sinon None.
         """
         query = (
-            "SELECT id_event, titre, description, categorie, statut, capacite, prix_base, prix_sam, prix_adherent, "
-            "id_admin_createur, date_creation "
-            "FROM evenement WHERE id_event = %(id_event)s"
+            "SELECT id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "       date_evenement, description, capacite, categorie, statut, date_creation "
+            "FROM evenement "
+            "WHERE id_evenement = %(id)s"
         )
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
-                curs.execute(query, {"id_event": id_event})
-                res = curs.fetchone()
+                curs.execute(query, {"id": id_evenement})
+                r = curs.fetchone()
 
-        if res is None:
+        if r is None:
             return None
-        
+
         return EvenementModelOut(
-            id_event=res["id_event"],
-            titre=res["titre"],
-            description=res["description"],
-            categorie=res["categorie"],
-            statut=res["statut"],
-            capacite=res["capacite"],
-            prixBase=res["prix_base"],
-            prixSam=res["prix_sam"],
-            prixAdherent=res["prix_adherent"],
-            creerPar_id=res["id_admin_createur"],
-            date_creation=res["date_creation"]
+            id_evenement=r["id_evenement"],
+            fk_transport=r["fk_transport"],
+            fk_utilisateur=r["fk_utilisateur"],
+            titre=r["titre"],
+            adresse=r["adresse"],
+            ville=r["ville"],
+            date_evenement=r["date_evenement"],
+            description=r["description"],
+            capacite=r["capacite"],
+            categorie=r["categorie"],
+            statut=r["statut"],
+            date_creation=r["date_creation"],
         )
+
+    def find_by_transport(self, fk_transport: int, limit: int = 100, offset: int = 0) -> List[EvenementModelOut]:
+        """
+        (Optionnel) Liste des événements liés à un transport.
+        """
+        query = (
+            "SELECT id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "       date_evenement, description, capacite, categorie, statut, date_creation "
+            "FROM evenement "
+            "WHERE fk_transport = %(fk_transport)s "
+            "ORDER BY date_evenement, id_evenement "
+            "LIMIT %(limit)s OFFSET %(offset)s"
+        )
+        params = {
+            "fk_transport": fk_transport,
+            "limit": max(limit, 0),
+            "offset": max(offset, 0),
+        }
+
+        with ConnectionManager().getConnexion() as con:
+            with con.cursor() as curs:
+                curs.execute(query, params)
+                rows = curs.fetchall()
+
+        return [
+            EvenementModelOut(
+                id_evenement=r["id_evenement"],
+                fk_transport=r["fk_transport"],
+                fk_utilisateur=r["fk_utilisateur"],
+                titre=r["titre"],
+                adresse=r["adresse"],
+                ville=r["ville"],
+                date_evenement=r["date_evenement"],
+                description=r["description"],
+                capacite=r["capacite"],
+                categorie=r["categorie"],
+                statut=r["statut"],
+                date_creation=r["date_creation"],
+            )
+            for r in rows
+        ]
+
+    # ---------- CREATE ----------
 
     def create(self, evenement_in: EvenementModelIn) -> EvenementModelOut:
         """
-        Crée un nouvel événement dans la base.
-
-        Args:
-            evenement_in (EvenementModelIn): données d'entrée de l'événement.
-
-        Returns:
-            EvenementModelOut: événement créé avec ID.
+        Crée un nouvel événement. Laisse la base renseigner date_creation (DEFAULT NOW()).
         """
         query = (
-            "INSERT INTO evenement (titre, description, categorie, statut, capacite, prix_base, prix_sam, prix_adherent, id_admin_createur, date_creation) "
-            "VALUES (%(titre)s, %(description)s, %(categorie)s, %(statut)s, %(capacite)s, %(prixBase)s, %(prixSam)s, %(prixAdherent)s, %(creerPar_id)s, %(date_creation)s) "
-            "RETURNING id_event"
+            "INSERT INTO evenement (fk_transport, fk_utilisateur, titre, adresse, ville, date_evenement, "
+            "                        description, capacite, categorie, statut) "
+            "VALUES (%(fk_transport)s, %(fk_utilisateur)s, %(titre)s, %(adresse)s, %(ville)s, %(date_evenement)s, "
+            "        %(description)s, %(capacite)s, %(categorie)s, %(statut)s) "
+            "RETURNING id_evenement, date_creation"
         )
-        now = datetime.now()
         params = {
+            "fk_transport": evenement_in.fk_transport,
+            "fk_utilisateur": evenement_in.fk_utilisateur,
             "titre": evenement_in.titre,
+            "adresse": evenement_in.adresse,
+            "ville": evenement_in.ville,
+            "date_evenement": evenement_in.date_evenement,
             "description": evenement_in.description,
+            "capacite": evenement_in.capacite,
             "categorie": evenement_in.categorie,
             "statut": evenement_in.statut,
-            "capacite": evenement_in.capacite,
-            "prixBase": evenement_in.prixBase,
-            "prixSam": evenement_in.prixSam,
-            "prixAdherent": evenement_in.prixAdherent,
-            "creerPar_id": evenement_in.creerPar_id,
-            "date_creation": now,
         }
 
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
-                new_id = curs.fetchone()["id_event"]
+                row = curs.fetchone()
 
         return EvenementModelOut(
-            id_event=new_id,
+            id_evenement=row["id_evenement"],
+            fk_transport=evenement_in.fk_transport,
+            fk_utilisateur=evenement_in.fk_utilisateur,
             titre=evenement_in.titre,
+            adresse=evenement_in.adresse,
+            ville=evenement_in.ville,
+            date_evenement=evenement_in.date_evenement,
             description=evenement_in.description,
+            capacite=evenement_in.capacite,
             categorie=evenement_in.categorie,
             statut=evenement_in.statut,
-            capacite=evenement_in.capacite,
-            prixBase=evenement_in.prixBase,
-            prixSam=evenement_in.prixSam,
-            prixAdherent=evenement_in.prixAdherent,
-            creerPar_id=evenement_in.creerPar_id,
-            date_creation=now,
+            date_creation=row["date_creation"],
         )
+
+    # ---------- UPDATE ----------
 
     def update(self, evenement: EvenementModelOut) -> Optional[EvenementModelOut]:
         """
-        Met à jour un événement existant.
-
-        Args:
-            evenement (EvenementModelOut): événement avec les nouvelles données (doit avoir un id_event valide).
-
-        Returns:
-            EvenementModelOut | None: événement mis à jour, ou None si introuvable.
+        Met à jour un événement existant (toutes colonnes modifiables sauf PK/date_creation).
         """
         query = (
-            "WITH updated AS ("
-            " UPDATE evenement SET "
-            "titre = %(titre)s, description = %(description)s, categorie = %(categorie)s, statut = %(statut)s, "
-            "capacite = %(capacite)s, prix_base = %(prixBase)s, prix_sam = %(prixSam)s, prix_adherent = %(prixAdherent)s "
-            "WHERE id_event = %(id_event)s "
-            "RETURNING *) "
-            "SELECT id_event, titre, description, categorie, statut, capacite, prix_base, prix_sam, prix_adherent, id_admin_createur, date_creation "
-            "FROM updated"
+            "WITH updated AS ( "
+            "  UPDATE evenement SET "
+            "     fk_transport = %(fk_transport)s, "
+            "     fk_utilisateur = %(fk_utilisateur)s, "
+            "     titre = %(titre)s, "
+            "     adresse = %(adresse)s, "
+            "     ville = %(ville)s, "
+            "     date_evenement = %(date_evenement)s, "
+            "     description = %(description)s, "
+            "     capacite = %(capacite)s, "
+            "     categorie = %(categorie)s, "
+            "     statut = %(statut)s "
+            "  WHERE id_evenement = %(id_evenement)s "
+            "  RETURNING id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "            date_evenement, description, capacite, categorie, statut, date_creation "
+            ") "
+            "SELECT * FROM updated"
         )
         params = {
-            "id_event": evenement.id_event,
+            "id_evenement": evenement.id_evenement,
+            "fk_transport": evenement.fk_transport,
+            "fk_utilisateur": evenement.fk_utilisateur,
             "titre": evenement.titre,
+            "adresse": evenement.adresse,
+            "ville": evenement.ville,
+            "date_evenement": evenement.date_evenement,
             "description": evenement.description,
+            "capacite": evenement.capacite,
             "categorie": evenement.categorie,
             "statut": evenement.statut,
-            "capacite": evenement.capacite,
-            "prixBase": evenement.prixBase,
-            "prixSam": evenement.prixSam,
-            "prixAdherent": evenement.prixAdherent,
         }
+
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
                 curs.execute(query, params)
-                res = curs.fetchone()
+                r = curs.fetchone()
 
-        if res is None:
+        if r is None:
             return None
 
         return EvenementModelOut(
-            id_event=res["id_event"],
-            titre=res["titre"],
-            description=res["description"],
-            categorie=res["categorie"],
-            statut=res["statut"],
-            capacite=res["capacite"],
-            prixBase=res["prix_base"],
-            prixSam=res["prix_sam"],
-            prixAdherent=res["prix_adherent"],
-            creerPar_id=res["id_admin_createur"],
-            date_creation=res["date_creation"]
+            id_evenement=r["id_evenement"],
+            fk_transport=r["fk_transport"],
+            fk_utilisateur=r["fk_utilisateur"],
+            titre=r["titre"],
+            adresse=r["adresse"],
+            ville=r["ville"],
+            date_evenement=r["date_evenement"],
+            description=r["description"],
+            capacite=r["capacite"],
+            categorie=r["categorie"],
+            statut=r["statut"],
+            date_creation=r["date_creation"],
         )
 
-    def delete(self, id_event: int) -> bool:
+    # ---------- DELETE ----------
+
+    def delete(self, id_evenement: int) -> bool:
         """
         Supprime un événement par son ID.
-
-        Args:
-            id_event (int): identifiant de l'événement à supprimer.
-
-        Returns:
-            bool: True si suppression effectuée, False sinon.
         """
-        query = "DELETE FROM evenement WHERE id_event = %(id_event)s"
+        query = "DELETE FROM evenement WHERE id_evenement = %(id)s"
         with ConnectionManager().getConnexion() as con:
             with con.cursor() as curs:
-                curs.execute(query, {"id_event": id_event})
+                curs.execute(query, {"id": id_evenement})
                 return curs.rowcount > 0

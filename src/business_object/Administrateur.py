@@ -1,8 +1,12 @@
-from utilisateur import Utilisateur
+from Utilisateur import Utilisateur
+from Evenement import Evenement
+from EvenementDAO import EvenementDao
+
 
 class Administrateur(Utilisateur):
     def __init__(self, id_utilisateur, email, prenom, nom, numeroTel, mot_de_passe, niveau_acces):
-        super().__init__(self, id_utilisateur, email, prenom, nom, numeroTel, mot_de_passe, niveau_acces)
+        super().__init__(self, id_utilisateur, email, prenom, nom,
+                         numeroTel, mot_de_passe, niveau_acces)
 
     def creerEvenement(self, titre, description, prix_base, supboisson) -> Evenement:
         """
@@ -73,7 +77,6 @@ class Administrateur(Utilisateur):
         """
         resDAO = ReservationDao()
         return resDAO.find_by_event_id(e.id_evenement)
-
 
     def afficher_statistiques(self, event: Evenement) -> StatistiquesEvenement:
         """

@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from unittest.mock import patch
@@ -6,9 +7,10 @@ from unittest.mock import patch
 from utils.reset_database import ResetDatabase
 from utils.securite import hash_password
 
-from dao.UtilisateurDAO import UtilisateurDAO
-
+from dao.UtilisateurDAO import UtilisateurDao
 from business_object.Utilisateur import Utilisateur
+
+
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -25,7 +27,7 @@ def test_find_all():
     # GIVEN
 
     # WHEN
-    utilisateurs = UtilisateurDAO().find_all()
+    utilisateurs = UtilisateurDao().find_all()
 
     # THEN
     assert isinstance(utilisateurs, list)
@@ -41,7 +43,7 @@ def test_find_by_id():
     id_utilisateur = 998
 
     # WHEN
-    utilisateur = UtilisateurDAO().find_by_id(id_utilisateur)
+    utilisateur = UtilisateurDao().find_by_id(id_utilisateur)
 
     # THEN
     assert utilisateur is not None
@@ -54,7 +56,7 @@ def test_find_by_email():
     email = "test@exemple.fr"
 
     # WHEN
-    utilisateur = UtilisateurDAO().find_by_email(email)
+    utilisateur = UtilisateurDao().find_by_email(email)
 
     # THEN
     assert utilisateur is not None
@@ -68,7 +70,7 @@ def test_create():
                               numero_tel="0678912345")
 
     # WHEN
-    creation_ok = UtilisateurDAO().create(utilisateur)
+    creation_ok = UtilisateurDao().create(utilisateur)
 
     # THEN
     assert creation_ok
@@ -84,7 +86,7 @@ def test_update():
                               numero_tel=new_numero_tel)
 
     # WHEN
-    modification_ok = UtilisateurDAO().update(utilisateur)
+    modification_ok = UtilisateurDao().update(utilisateur)
 
     # THEN
     assert modification_ok
@@ -98,7 +100,7 @@ def test_delete():
                               nom="Jerrari", numero_tel="0678912345")
 
     # WHEN
-    suppression_ok = UtilisateurDAO().supprimer(utilisateur)
+    suppression_ok = UtilisateurDao().supprimer(utilisateur)
 
     # THEN
     assert suppression_ok
@@ -112,7 +114,7 @@ def test_authentificate():
     mdp = "Mdpexemple35"
 
     # WHEN
-    utilisateur = UtilisateurDAO().authentificate(id_utilisateur,
+    utilisateur = UtilisateurDao().authentificate(id_utilisateur,
                                                   hash_password(mdp, id_utilisateur))
 
     # THEN

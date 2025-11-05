@@ -9,6 +9,7 @@ from unittest.mock import patch
 from utils.reset_database2 import ResetDatabase
 from utils.securite import hash_password
 
+from 
 from dao.ParticipantDAO import ParticipantDao
 from business_object.Participant import Participant
 from model.participant_models import ParticipantModelOut, ParticipanrModelIn
@@ -49,6 +50,8 @@ def test_find_by_id():
     # THEN
     assert participant is not None
 
+
+#Pas fait après cette ligne ---------------------------------------------------------------
 
 def test_find_by_email():
     """Recherche d'un utilisateur par son email"""

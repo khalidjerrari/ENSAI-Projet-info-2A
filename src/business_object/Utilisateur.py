@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
-from EvenementDao import EvenementDao
-from ReservationDAO import ReservationDAO
-from Evenement import Evenement
-from CreneauBus import CreneauBus
-from Reservation import Reservation
+from dao.EvenementDAO import EvenementDao
+from dao.ReservationDAO import ReservationDao
+from business_object.Evenement import Evenement
+from business_object.CreneauBus import CreneauBus
+from business_object.Reservation import Reservation
 
 from utils.api_brevo import send_email_brevo
 

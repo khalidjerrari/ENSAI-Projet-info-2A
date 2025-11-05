@@ -1,5 +1,4 @@
 # dao/reservation_dao.py
-from typing import List
 from dao.db_connection import DBConnection
 from model.reservation_models import ReservationModelOut
 
@@ -9,7 +8,7 @@ class ReservationDao:
     DAO pour la gestion des réservations (table 'reservation')
     """
 
-    def find_by_user(self, id_utilisateur: int) -> List[ReservationModelOut]:
+    def find_by_user(self, id_utilisateur: int):
         """
         Récupère toutes les réservations faites par un utilisateur donné.
 

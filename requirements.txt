@@ -15,3 +15,6 @@ uvicorn
 logging
 logging.config
 dotenv
+bcrypt
+pydantic
+pydantic[email]

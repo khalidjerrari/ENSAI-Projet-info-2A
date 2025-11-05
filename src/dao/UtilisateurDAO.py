@@ -3,7 +3,7 @@ from typing import List, Optional
 import bcrypt
 
 from dao.db_connection import DBConnection
-from models.utilisateur_models import UtilisateurModelIn, UtilisateurModelOut
+from model.utilisateur_models import UtilisateurModelIn, UtilisateurModelOut
 
 
 class UtilisateurDao:

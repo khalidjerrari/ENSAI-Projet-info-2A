@@ -1,31 +1,55 @@
 # view/auth/connexion_vue.py
+from __future__ import annotations
 from typing import Optional
 from getpass import getpass
+import logging
 
 from view.accueil.accueil_vue import AccueilVue
-# from dao.utilisateur_dao import UtilisateurDao  # à brancher si besoin
-# from dao.participant_dao import ParticipantDao  # ou AdministrateurDao, selon le cas
+from view.session import Session
+from dao.UtilisateurDAO import UtilisateurDao
+
+logger = logging.getLogger(__name__)
 
 
 class ConnexionVue:
     """
     Vue de connexion utilisateur.
-    À brancher sur UtilisateurDao.authenticate(...) ou Participant/Administrateur DAO.
+    Utilise UtilisateurDao.authenticate(email, mot_de_passe).
     """
 
+    def __init__(self, titre: str = "Connexion à l'application") -> None:
+        self.titre = titre
+        self.dao = UtilisateurDao()
+
     def afficher(self) -> None:
-        print("\n--- CONNEXION ---")
+        print("\n" + "-" * 50)
+        print(self.titre.center(50))
+        print("-" * 50)
 
     def choisir_menu(self) -> Optional[AccueilVue]:
+        # --- Saisie ---
         email = input("Email : ").strip()
-        mot_de_passe = getpass("Mot de passe : ")
+        mot_de_passe = input("Mot de passe : ")
 
-        # TODO: Brancher l'authentification réelle
-        # user = UtilisateurDao().authenticate(email, mot_de_passe)
-        # if user:
-        #     print(f"Connecté : {user.prenom} {user.nom}")
-        # else:
-        #     print("Identifiants invalides")
+        if not email or not mot_de_passe:
+            print("Email et mot de passe sont obligatoires.")
+            return AccueilVue("Retour au menu principal")
 
-        print("→ TODO: brancher l'authentification (UtilisateurDao/ParticipantDao/AdministrateurDao).")
-        return AccueilVue("Vous êtes revenu au menu principal")
+        # --- Authentification ---
+        try:
+            user = self.dao.authenticate(email=email, mot_de_passe=mot_de_passe)
+        except Exception as e:
+            logger.exception("Erreur d'authentification: %s", e)
+            print("Erreur technique pendant l’authentification.")
+            return AccueilVue("Retour au menu principal")
+
+        if not user:
+            print("Identifiants invalides.")
+            return AccueilVue("Retour au menu principal")
+
+        # --- Mise en session + feedback ---
+        Session().connecter(user)
+        role = "Administrateur" if getattr(user, "administrateur", False) else "Participant"
+        print(f"Connecté : {user.prenom} {user.nom} — {role}")
+
+        return AccueilVue(f"Bienvenue {user.prenom} !")

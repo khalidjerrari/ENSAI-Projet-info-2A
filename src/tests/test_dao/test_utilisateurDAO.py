@@ -1,4 +1,6 @@
 import os
+import uuid
+from datetime import datetime
 
 import pytest
 
@@ -65,26 +67,35 @@ def test_create():
     """ Création d'un utilisateur """
 
     # GIVEN
+    email = f"marie.martin.{uuid.uuid4().hex[:8]}@example.com"
     utilisateur = UtilisateurModelIn(
-        email=, prenom=, nom=,
-        telephone=, administrateur=False,
-        mot_de_passe=)
+        email=email,
+        prenom="Marie",
+        nom="Martin",
+        telephone="0612345678",
+        mot_de_passe="$2b$12$xagP1GoNLUNNYm8WIAqVRO7Z3HAIrOLFKxwLDAnu5oak/fyWkknDi",
+        administrateur=True
+        )
 
     # WHEN
     creation_ok = UtilisateurDao().create(utilisateur)
 
     # THEN
     assert creation_ok
-    assert utilisateur.id_utilisateur
+    utilisateur_en_base = UtilisateurDao().find_by_email(email)
+    assert utilisateur_en_base is not None
+    assert utilisateur_en_base.prenom == "Marie"
 
 
 def test_update():
     """Met à jour un utilisateur"""
 
     # GIVEN
-    new_numero_tel = "0612345678"
-    utilisateur = Utilisateur(mail="test@exemple.fr", prenom="Khalid", nom="Jerrari",
-                              numero_tel=new_numero_tel)
+    new_mail = "alice.dupont@gmail.com"
+    utilisateur = UtilisateurModelOut(id_utilisateur=1, email=new_mail, prenom="Alice", nom="Dupont",
+                                      telephone="0612345678",
+                                      mot_de_passe="$2b$12$xagP1GoNLUNNYm8WIAqVRO7Z3HAIrOLFKxwLDAnu5oak/fyWkknDi",
+                                      administrateur=True, date_creation=datetime.now())
 
     # WHEN
     modification_ok = UtilisateurDao().update(utilisateur)
@@ -97,11 +108,12 @@ def test_delete():
     """ Supprime un utilisateur """
 
     # GIVEN
-    utilisateur = Utilisateur(id_utilisateur=123, mail="test@exemple.fr", prenom="Khalid",
-                              nom="Jerrari", numero_tel="0678912345")
+    dao = UtilisateurDao()
+    utilisateur = dao.find_by_id(5)
+    assert utilisateur is not None
 
     # WHEN
-    suppression_ok = UtilisateurDao().supprimer(utilisateur)
+    suppression_ok = UtilisateurDao().delete(utilisateur.id_utilisateur)
 
     # THEN
     assert suppression_ok

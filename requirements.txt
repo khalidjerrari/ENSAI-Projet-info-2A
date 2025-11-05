@@ -19,3 +19,4 @@ bcrypt
 pydantic
 pydantic[email]
 typing
+datetime

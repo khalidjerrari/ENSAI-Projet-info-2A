@@ -26,6 +26,7 @@ class AccueilVue(VueAbstraite):
                 "Créer un compte",
                 "Se connecter",
                 "Consulter les événements",
+                "Créer les événements",
                 "Quitter",
             ],
         ).execute()
@@ -36,17 +37,19 @@ class AccueilVue(VueAbstraite):
 
             case "Se connecter":
                 from view.auth.connexion_vue import ConnexionVue
-
                 return ConnexionVue("Connexion à l'application")
 
             case "Créer un compte":
                 from view.auth.creation_compte_vue import CreationCompteVue
-
                 return CreationCompteVue("Création de compte joueur")
 
             case "Consulter les événements":  # Je sais pas comment on fait ça
-                from view.consulter.consulter_vue import ConsulterVue
+                from view.consulter.consulter_evenement_vue import ConsulterVue
                 return ConsulterVue()
+
+            case "Créer les événements":
+                from view.evenement.creer_evenement_vue import CreerEvenementVue
+                return CreerEvenementVue()
 
             case "Ré-initialiser la base de données":  # On garde ça ??
                 succes = ResetDatabase().lancer()

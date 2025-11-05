@@ -4,7 +4,7 @@ from datetime import datetime
 import bcrypt
 
 from dao.db_connection import DBConnection
-from models.utilisateur_models import AdministrateurModelOut, AdministrateurModelIn
+from model.utilisateur_models import AdministrateurModelOut, AdministrateurModelIn
 
 
 class AdministrateurDao:

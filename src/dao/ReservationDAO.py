@@ -1,7 +1,7 @@
 # dao/reservation_dao.py
 from typing import List
 from dao.db_connection import DBConnection
-from models.reservation_models import ReservationModelOut
+from model.reservation_models import ReservationModelOut
 
 
 class ReservationDao:

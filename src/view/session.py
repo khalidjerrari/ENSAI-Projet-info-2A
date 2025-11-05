@@ -25,6 +25,10 @@ class Session(metaclass=Singleton):
         self.utilisateur = None
         self.debut_connexion = None
 
+    def est_connecte(self) -> bool:
+        """Retourne True si un utilisateur est actuellement connecté."""
+        return self.utilisateur is not None
+
     def afficher(self) -> str:
         """Afficher les informations de connexion"""
         res = "Actuellement en session :\n"

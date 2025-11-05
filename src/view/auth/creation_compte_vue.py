@@ -1,6 +1,6 @@
 # view/auth/creation_compte_vue.py
 from typing import Optional, List
-from getpass import getpass
+#from getpass import getpass
 import re
 
 from pydantic import ValidationError
@@ -22,7 +22,7 @@ class CreationCompteVue:
     """
 
     def __init__(self, dao: Optional[UtilisateurDao] = None):
-        self.dao = dao or UtilisateurDao()
+        self.dao = UtilisateurDao()
 
     def afficher(self) -> None:
         print("\n--- CRÉER UN COMPTE ---")

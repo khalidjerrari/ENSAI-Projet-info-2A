@@ -1,66 +1,44 @@
 # utils/password_utils.py
-import hashlib
-import os
-import binascii
-import secrets
+import bcrypt
 from typing import Optional
 from getpass import getpass
 
-# Paramètres recommandés (ajustables)
-PBKDF2_ITERATIONS = 260_000
-SALT_BYTES = 16
-DKLEN = 32  # 32 bytes = 256 bits
 
-PBKDF2_PREFIX = "pbkdf2$sha256"
-
-
-def _generate_salt(n: int = SALT_BYTES) -> bytes:
-    """Génère un sel aléatoire en bytes."""
-    return os.urandom(n)
-
-
-def hash_password(password: str, iterations: int = PBKDF2_ITERATIONS, salt: Optional[bytes] = None) -> str:
+def hash_password(password: str, rounds: int = 12, salt: Optional[bytes] = None) -> str:
     """
-    Hash un mot de passe en utilisant PBKDF2-HMAC-SHA256.
-    Retourne une chaîne au format : pbkdf2$sha256$<iterations>$<salt_hex>$<dk_hex>
+    Hash un mot de passe avec bcrypt.
+    - rounds : facteur de coût (par défaut 12).
+    - salt : sel bcrypt optionnel (généralement on laisse None pour bcrypt.gensalt()).
+
+    Retourne une chaîne UTF-8 au format bcrypt, ex: $2b$12$...
     """
-    if salt is None:
-        salt = _generate_salt()
     if isinstance(password, str):
         password = password.encode("utf-8")
 
-    dk = hashlib.pbkdf2_hmac("sha256", password, salt, iterations, dklen=DKLEN)
-    salt_hex = binascii.hexlify(salt).decode("ascii")
-    dk_hex = binascii.hexlify(dk).decode("ascii")
-    return f"{PBKDF2_PREFIX}${iterations}${salt_hex}${dk_hex}"
+    if salt is None:
+        salt = bcrypt.gensalt(rounds=rounds)
+
+    hashed = bcrypt.hashpw(password, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(stored_hash: str, password: str) -> bool:
     """
-    Vérifie si le mot de passe correspond au hash stocké (format pbkdf2$sha256$...).
+    Vérifie si le mot de passe correspond au hash bcrypt stocké.
     Retourne True si OK, False sinon.
     """
     try:
-        parts = stored_hash.split("$")
-        if len(parts) != 5 or parts[0] != "pbkdf2" or parts[1] != "sha256":
-            return False
-        iterations = int(parts[2])
-        salt = binascii.unhexlify(parts[3])
-        dk_stored = binascii.unhexlify(parts[4])
+        if isinstance(password, str):
+            password = password.encode("utf-8")
+        return bcrypt.checkpw(password, stored_hash.encode("utf-8"))
     except Exception:
         return False
-
-    if isinstance(password, str):
-        password = password.encode("utf-8")
-
-    dk_check = hashlib.pbkdf2_hmac("sha256", password, salt, iterations, dklen=len(dk_stored))
-    return secrets.compare_digest(dk_check, dk_stored)
 
 
 # --- Utilitaire CLI simple ---
 def _cli_hash_interactive():
     """Saisie interactive (masquée) pour hasher un mot de passe et l'afficher."""
-    print("Générateur de hash PBKDF2-HMAC-SHA256")
+    print("Générateur de hash bcrypt")
     pwd = getpass("Mot de passe à hasher : ")
     pwd2 = getpass("Confirmation : ")
     if pwd != pwd2:
@@ -81,7 +59,9 @@ def _cli_hash_from_args(passwords):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Utilitaire pour hasher des mots de passe (PBKDF2-HMAC-SHA256).")
+    parser = argparse.ArgumentParser(
+        description="Utilitaire pour hasher des mots de passe (bcrypt)."
+    )
     parser.add_argument(
         "-p", "--password",
         action="append",
@@ -92,13 +72,22 @@ if __name__ == "__main__":
         action="store_true",
         help="Mode interactif (saisie masquée)."
     )
+    parser.add_argument(
+        "-c", "--cost",
+        type=int,
+        default=12,
+        help="Facteur de coût bcrypt (rounds), défaut 12."
+    )
     args = parser.parse_args()
 
     if args.interactive:
         _cli_hash_interactive()
     elif args.password:
-        _cli_hash_from_args(args.password)
+        # Permettre de spécifier le coût depuis la CLI
+        for p in args.password:
+            print(hash_password(p, rounds=args.cost))
     else:
         parser.print_help()
 
+# Exemple :
 #PYTHONPATH="src"; python src/utils/securite.py -p mdpAlice123 -p mdpBob123

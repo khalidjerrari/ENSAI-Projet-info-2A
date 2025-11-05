@@ -48,7 +48,7 @@ class ConnexionVue:
             return AccueilVue("Retour au menu principal")
 
         # --- Mise en session + feedback ---
-        Session().connecter(user)
+        Session().connexion(user)
         role = "Administrateur" if getattr(user, "administrateur", False) else "Participant"
         print(f"Connecté : {user.prenom} {user.nom} — {role}")
 

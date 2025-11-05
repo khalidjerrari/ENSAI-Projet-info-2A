@@ -1,7 +1,7 @@
 INSERT INTO utilisateur (nom, prenom, telephone, email, mot_de_passe, administrateur)
 VALUES
-('Dupont', 'Alice', '0601020304', 'alice.dupont@email.com', pbkdf2$sha256$260000$55aed1a9697356e8eeed8a4afdeca349$2f762747bf5853c5553a3615e7e01918ffd83d9128c78b28c9f36e493353f725, FALSE),
-('Martin', 'Bob', '0605060708', 'bob.martin@email.com', pbkdf2$sha256$260000$4a02305532f7554a8030792c2fe026e1$bf24583e6f3515acc047c23acb6c7a399bf75759b062b1d15808f620d95f3aec, TRUE),
+('Dupont', 'Alice', '0601020304', 'alice.dupont@email.com','$2b$12$kasVuw8LUvVK3anAskV40.ATzMUuUF5r9sRIuJc17BG4o2G/XKtyi', FALSE),
+('Martin', 'Bob', '0605060708', 'bob.martin@email.com','$2b$12$ZI9goAGUifVgF7dcZbNvgOjKED/Bfo193c5BDQW5RSaNxvkqu9QYa', TRUE),
 ('Durand', 'Caroline', '0608091011', 'caroline.durand@email.com', 'mdpCaroline123', FALSE),
 ('Petit', 'David', '0611121314', 'david.petit@email.com', 'mdpDavid123', FALSE);
 

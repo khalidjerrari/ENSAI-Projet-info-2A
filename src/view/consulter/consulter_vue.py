@@ -55,12 +55,12 @@ class ConsulterVue(VueAbstraite):
                 print(f"- {r['date_evenement']} | {r['titre']} ({r.get('ville') or '-'}) "
                       f"— places restantes: {r['places_restantes']}")
             input("\n(Entrée) pour continuer...")
-            return self  # ✅ ne pas retourner None
+            return self  # ne pas retourner None
 
         else:
             print("Choix invalide.")
             input("\n(Entrée) pour continuer...")
-            return self  # ✅ rester sur la vue
+            return self  # rester sur la vue
 
     def _afficher_events(self, events) -> None:
         if not events:

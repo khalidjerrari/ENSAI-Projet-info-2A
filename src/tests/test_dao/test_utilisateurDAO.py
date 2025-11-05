@@ -4,13 +4,12 @@ import pytest
 
 from unittest.mock import patch
 
-from utils.reset_database import ResetDatabase
+from utils.reset_database2 import ResetDatabase
 from utils.securite import hash_password
 
 from dao.UtilisateurDAO import UtilisateurDao
 from business_object.Utilisateur import Utilisateur
-
-
+from model.utilisateur_models import UtilisateurModelOut, UtilisateurModelIn
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -32,7 +31,7 @@ def test_find_all():
     # THEN
     assert isinstance(utilisateurs, list)
     for j in utilisateurs:
-        assert isinstance(j, Utilisateur)
+        assert isinstance(j, UtilisateurModelOut)
     assert len(utilisateurs) >= 2
 
 
@@ -40,7 +39,7 @@ def test_find_by_id():
     """Recherche par id d'un utilisateur existant"""
 
     # GIVEN
-    id_utilisateur = 998
+    id_utilisateur = 1
 
     # WHEN
     utilisateur = UtilisateurDao().find_by_id(id_utilisateur)
@@ -53,7 +52,7 @@ def test_find_by_email():
     """Recherche d'un utilisateur par son email"""
 
     # GIVEN
-    email = "test@exemple.fr"
+    email = "alice.dupont@email.com"
 
     # WHEN
     utilisateur = UtilisateurDao().find_by_email(email)
@@ -66,8 +65,10 @@ def test_create():
     """ Création d'un utilisateur """
 
     # GIVEN
-    utilisateur = Utilisateur(mail="test@exemple.fr", prenom="Khalid", nom="Jerrari",
-                              numero_tel="0678912345")
+    utilisateur = UtilisateurModelIn(
+        email=, prenom=, nom=,
+        telephone=, administrateur=False,
+        mot_de_passe=)
 
     # WHEN
     creation_ok = UtilisateurDao().create(utilisateur)

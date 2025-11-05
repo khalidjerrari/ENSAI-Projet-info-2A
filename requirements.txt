@@ -18,3 +18,4 @@ dotenv
 bcrypt
 pydantic
 pydantic[email]
+typing

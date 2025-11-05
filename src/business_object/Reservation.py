@@ -2,11 +2,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-# Import des types (pas d'import circulaire)
-if typing.TYPE_CHECKING:
-    from utilisateur import Utilisateur
-    from evenement import Evenement
-    from creneaubus import CreneauBus
+from business_object.Evenement import Evenement
+from business_object.CreneauBus import CreneauBus
 
 
 class Reservation:
@@ -40,14 +37,13 @@ class Reservation:
     evenement_associe : Evenement
         Objet de la classe Evenement, représentant un événement
     """
-    def __init__(self, cree_par: Utilisateur, code_reservation: str,
-                 email_contact: str, prenom_contact: str, nom_contact: str,
+    def __init__(self, code_reservation: str, email_contact: str,
+                 prenom_contact: str, nom_contact: str,
                  numero_tel: str, boit: bool, creneau_aller: CreneauBus,
                  creneau_retour: CreneauBus, sam: bool, adherent: bool,
                  evenement_associe: Evenement):
 
         self.id_reservation: Optional[int] = None
-        self.cree_par = cree_par
         self.code_reservation = code_reservation
         self.email_contact = email_contact
         self.prenom_contact = prenom_contact

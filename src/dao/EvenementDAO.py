@@ -1,7 +1,7 @@
 # dao/evenement_dao.py
 from typing import List, Optional
 from dao.db_connection import DBConnection
-from models.evenement_models import EvenementModelOut, EvenementModelIn
+from model.evenement_models import EvenementModelOut, EvenementModelIn
 
 
 class EvenementDao:

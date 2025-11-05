@@ -1,40 +1,141 @@
 # view/auth/creation_compte_vue.py
-from typing import Optional
+from typing import Optional, List
 from getpass import getpass
+import re
+
+from pydantic import ValidationError
 
 from view.accueil.accueil_vue import AccueilVue
-# from dao.utilisateur_dao import UtilisateurDao
-# from models.utilisateur_models import UtilisateurModelIn
+from view.session import Session
+
+from dao.UtilisateurDAO import UtilisateurDao
+from model.utilisateur_models import (
+    UtilisateurModelIn,
+    UtilisateurModelOut,
+)
 
 
 class CreationCompteVue:
     """
-    Vue de création de compte.
-    À brancher sur UtilisateurDao.create(UtilisateurModelIn(...))
+    Vue de création de compte (console).
+    Utilise UtilisateurDao et les modèles Pydantic UtilisateurModelIn/Out.
     """
+
+    def __init__(self, dao: Optional[UtilisateurDao] = None):
+        self.dao = dao or UtilisateurDao()
 
     def afficher(self) -> None:
         print("\n--- CRÉER UN COMPTE ---")
 
     def choisir_menu(self) -> Optional[AccueilVue]:
+        # --- Saisie ---
         nom = input("Nom : ").strip()
         prenom = input("Prénom : ").strip()
         telephone = input("Téléphone (optionnel) : ").strip() or None
         email = input("Email : ").strip()
-        mot_de_passe = getpass("Mot de passe : ")
-        mot_de_passe2 = getpass("Confirmez le mot de passe : ")
+        mot_de_passe = input("Mot de passe : ")
+        mot_de_passe2 = input("Confirmez le mot de passe : ")
 
-        if mot_de_passe != mot_de_passe2:
-            print("❌ Les mots de passe ne correspondent pas.")
+        # --- Vérifs simples avant Pydantic ---
+        erreurs = self._verifs_preliminaires(
+            nom=nom,
+            prenom=prenom,
+            telephone=telephone,
+            email=email,
+            pwd=mot_de_passe,
+            pwd2=mot_de_passe2,
+        )
+        if erreurs:
+            print("\n Erreurs :")
+            for e in erreurs:
+                print(f" - {e}")
             return AccueilVue("Création annulée — retour au menu principal")
 
-        # TODO: appel réel à la couche DAO
-        # user_in = UtilisateurModelIn(
-        #     nom=nom, prenom=prenom, telephone=telephone,
-        #     email=email, mot_de_passe=mot_de_passe, administrateur=False
-        # )
-        # user_out = UtilisateurDao().create(user_in)
-        # print(f"Compte créé : {user_out.prenom} {user_out.nom} (id={user_out.id_utilisateur})")
+        # --- Unicité email ---
+        try:
+            if self.dao.find_by_email(email) is not None:
+                print("Un compte existe déjà avec cet email.")
+                return AccueilVue("Création annulée — retour au menu principal")
+        except Exception as exc:
+            print(f"Erreur technique lors de la vérification de l'email : {exc}")
+            return AccueilVue("Erreur technique — retour au menu principal")
 
-        print("→ TODO: brancher la création de compte (UtilisateurDao.create).")
-        return AccueilVue("Compte créé (simulation) — retour au menu principal")
+        # --- Validation Pydantic + Création via DAO ---
+        try:
+            user_in = UtilisateurModelIn(
+                nom=nom,
+                prenom=prenom,
+                telephone=telephone,
+                email=email,
+                mot_de_passe=mot_de_passe,
+                administrateur=False,
+            )
+        except ValidationError as ve:
+            print("\n Données invalides :")
+            for err in ve.errors():
+                loc = ".".join(str(x) for x in err.get("loc", []))
+                msg = err.get("msg", "invalide")
+                print(f" - {loc}: {msg}")
+            return AccueilVue("Création annulée — retour au menu principal")
+
+        try:
+            user_out: UtilisateurModelOut = self.dao.create(user_in)
+        except Exception as exc:
+            print(f"Erreur lors de la création du compte : {exc}")
+            return AccueilVue("Création échouée — retour au menu principal")
+
+        # --- Connexion automatique ---
+        try:
+            Session().connexion(user_out)
+            print(f"Compte créé et connecté : {user_out.prenom} {user_out.nom}")
+        except Exception as exc:
+            print(f"Compte créé mais échec de la connexion automatique : {exc}")
+
+        return AccueilVue("Compte créé — bienvenue !")
+
+    # =========================
+    # Helpers validations simples
+    # =========================
+    def _verifs_preliminaires(
+        self,
+        nom: str,
+        prenom: str,
+        telephone: Optional[str],
+        email: str,
+        pwd: str,
+        pwd2: str,
+    ) -> List[str]:
+        erreurs: List[str] = []
+        if not nom:
+            erreurs.append("Le nom est obligatoire.")
+        if not prenom:
+            erreurs.append("Le prénom est obligatoire.")
+        if pwd != pwd2:
+            erreurs.append("Les mots de passe ne correspondent pas.")
+        if not self._password_valide(pwd):
+            erreurs.append("Mot de passe trop faible (min 8, avec lettre et chiffre).")
+        if telephone and not self._telephone_valide(telephone):
+            erreurs.append("Téléphone invalide (10 chiffres, ex. 0601020304).")
+        # L'email sera validé par Pydantic (EmailStr) ; on garde un check léger pour feedback immédiat
+        if not self._email_rough_check(email):
+            erreurs.append("Format d'email suspect.")
+        return erreurs
+
+    @staticmethod
+    def _email_rough_check(email: str) -> bool:
+        return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
+
+    @staticmethod
+    def _telephone_valide(tel: str) -> bool:
+        tel_numbers = re.sub(r"[ \.\-]", "", tel)
+        return bool(re.match(r"^\d{10}$", tel_numbers))
+
+    @staticmethod
+    def _password_valide(pwd: str) -> bool:
+        if len(pwd) < 8:
+            return False
+        if not re.search(r"[A-Za-z]", pwd):
+            return False
+        if not re.search(r"\d", pwd):
+            return False
+        return True

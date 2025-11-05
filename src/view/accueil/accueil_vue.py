@@ -40,9 +40,9 @@ class AccueilVue(VueAbstraite):
                 return ConnexionVue("Connexion à l'application")
 
             case "Créer un compte":
-                from view.accueil.inscription_vue import InscriptionVue
+                from view.auth.creation_compte_vue import CreationCompteVue
 
-                return InscriptionVue("Création de compte joueur")
+                return CreationCompteVue("Création de compte joueur")
 
             case "Consulter les événements":  # Je sais pas comment on fait ça
                 from view.consulter.consulter_vue import ConsulterVue

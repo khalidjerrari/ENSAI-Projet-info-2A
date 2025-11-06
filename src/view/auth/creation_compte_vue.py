@@ -5,7 +5,6 @@ import re
 
 from pydantic import ValidationError
 
-from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
 from dao.UtilisateurDAO import UtilisateurDao
@@ -27,7 +26,8 @@ class CreationCompteVue:
     def afficher(self) -> None:
         print("\n--- CRÉER UN COMPTE ---")
 
-    def choisir_menu(self) -> Optional[AccueilVue]:
+    def choisir_menu(self) -> Optional["AccueilVue"]:
+        from view.accueil.accueil_vue import AccueilVue
         # --- Saisie ---
         nom = input("Nom : ").strip()
         prenom = input("Prénom : ").strip()

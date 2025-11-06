@@ -1,8 +1,9 @@
 # view/consulter/consulter_vue.py
 from typing import Optional
+from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
-from view.accueil.accueil_vue import AccueilVue
 from dao.Consultation_evenementDAO import ConsultationEvenementDao
+from view.reservations.reservation_vue import ReservationVue
 from datetime import date
 
 
@@ -12,64 +13,89 @@ class ConsulterVue(VueAbstraite):
         self.dao = ConsultationEvenementDao()
 
     def afficher(self) -> None:
-        super().afficher()  # nettoie + affiche le titre/message
-        print("1) Lister tous les événements")
-        print("2) Evénements disponibles (à partir d’aujourd’hui)")
-        print("3) Recherche (ville / statut / dates)")
-        print("4) Liste avec places restantes")
-        print("0) Retour au menu principal")
+        super().afficher()
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
-        choix = input("Votre choix : ").strip()
-        if choix == "0":
-            return AccueilVue("Retour au menu principal")
+        # On importe ici pour éviter les boucles circulaires
+        from view.client.connexion_client_vue import ConnexionClientVue
+        from view.accueil.accueil_vue import AccueilVue
+        from view.session import Session
+        
+        user = Session().utilisateur
+        vue_de_retour = ConnexionClientVue if user else AccueilVue
+        
+        menu_choix = {
+            "Lister les événements disponibles (places restantes)": "places",
+            "Lister tous les événements": "tous",
+            "Rechercher (ville, statut, dates)": "recherche",
+            "Retour": "retour"
+        }
 
-        elif choix == "1":
-            events = self.dao.lister_tous(limit=50)
-            self._afficher_events(events)
-            input("\n(Entrée) pour continuer...")
-            return self  # rester sur la même vue
+        choix_action = inquirer.select(
+            message="Que souhaitez-vous faire ?",
+            choices=list(menu_choix.keys()),
+        ).execute()
+        
+        action = menu_choix[choix_action]
+        
+        if action == "retour":
+            return vue_de_retour("Retour au menu principal")
 
-        elif choix == "2":
-            events = self.dao.lister_disponibles(limit=50, a_partir_du=date.today())
-            self._afficher_events(events)
-            input("\n(Entrée) pour continuer...")
+        events: List[Any] = [] # Accepte n'importe quel type
+        
+        try:
+            # --- 1. On récupère les événements (le code ne change pas) ---
+            if action == "places":
+                events = self.dao.lister_avec_places_restantes(limit=50, a_partir_du=date.today())
+            
+            elif action == "tous":
+                events = self.dao.lister_tous(limit=50)
+            
+            elif action == "recherche":
+                ville = input("Ville (laisser vide pour ignorer) : ").strip() or None
+                statut = input("Statut (ex: 'disponible en ligne', laisser vide) : ").strip() or None
+                events = self.dao.rechercher(ville=ville, statut=statut, limit=50)
+
+            # --- 2. On vérifie si la liste est vide ---
+            if not events:
+                print("\n😕 Aucun événement ne correspond à votre recherche.")
+                input("\n(Entrée) pour continuer...")
+                return self
+
+            # --- 3. CORRECTION : On formate les événements ---
+            choices_events = []
+            for ev in events:
+                
+                # On vérifie si ev est un dictionnaire
+                if isinstance(ev, dict):
+                    # Cas 1: C'est un dict (de lister_avec_places_restantes)
+                    places_val = ev.get('places_restantes')
+                    places_str = f"({places_val} places)" if places_val is not None else ""
+                    date_evt = ev.get('date_evenement', '')
+                    titre = ev.get('titre', 'N/A')
+                else:
+                    # Cas 2: C'est un objet (EvenementModelOut)
+                    places_str = "" # Pas de calcul de places ici
+                    date_evt = ev.date_evenement
+                    titre = ev.titre
+
+                titre_affiche = f"{date_evt} | {titre} {places_str}"
+                choices_events.append({"name": titre_affiche, "value": ev})
+
+            choices_events.append({"name": "--- Retour ---", "value": None})
+
+            # --- 4. On affiche le menu de sélection ---
+            event_selectionne = inquirer.select(
+                message="Sélectionnez un événement pour voir les détails et réserver :",
+                choices=choices_events,
+            ).execute()
+
+            if event_selectionne is None:
+                return self 
+
+            return ReservationVue(evenement=event_selectionne)
+
+        except Exception as e:
+            print(f"❌ Erreur lors de la récupération des événements : {e}")
+            input("(Entrée) pour continuer...")
             return self
-
-        elif choix == "3":
-            ville = input("Ville (laisser vide pour ignorer) : ").strip() or None
-            statut = input("Statut (ex: 'disponible en ligne', laisser vide) : ").strip() or None
-            dmin = input("Date min (YYYY-MM-DD, vide=ignorer) : ").strip() or None
-            dmax = input("Date max (YYYY-MM-DD, vide=ignorer) : ").strip() or None
-            date_min = date.fromisoformat(dmin) if dmin else None
-            date_max = date.fromisoformat(dmax) if dmax else None
-            events = self.dao.rechercher(ville=ville, statut=statut,
-                                         date_min=date_min, date_max=date_max, limit=50)
-            self._afficher_events(events)
-            input("\n(Entrée) pour continuer...")
-            return self
-
-        elif choix == "4":
-            rows = self.dao.lister_avec_places_restantes(limit=50, a_partir_du=date.today())
-            for r in rows:
-                print(f"- {r['date_evenement']} | {r['titre']} ({r.get('ville') or '-'}) "
-                      f"— places restantes: {r['places_restantes']}")
-            input("\n(Entrée) pour continuer...")
-            return self  # ne pas retourner None
-
-        else:
-            print("Choix invalide.")
-            input("\n(Entrée) pour continuer...")
-            return self  # rester sur la vue
-
-    def _afficher_events(self, events) -> None:
-        if not events:
-            print("(Aucun événement)")
-            return
-        for e in events:
-            # s’adapte si e est un dict ou un objet
-            date_evt = getattr(e, "date_evenement", None) or e.get("date_evenement")
-            titre = getattr(e, "titre", None) or e.get("titre")
-            ville = (getattr(e, "ville", None) or e.get("ville")) or "-"
-            statut = getattr(e, "statut", None) or e.get("statut")
-            print(f"- {date_evt} | {titre} ({ville}) — statut: {statut}")

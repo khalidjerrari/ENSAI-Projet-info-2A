@@ -1,59 +1,73 @@
+# Dans src/view/accueil/accueil_vue.py
+
+# ... (tous tes imports en haut) ...
+# AJOUTE L'IMPORT DE LA NOUVELLE VUE :
+from view.client.connexion_client_vue import ConnexionClientVue
+# --- Imports en haut du fichier ---
 from InquirerPy import inquirer
-
-from utils.reset_database import ResetDatabase
-
 from view.vue_abstraite import VueAbstraite
-from view.session import Session
-
+from view.session import Session 
+from view.auth.connexion_vue import ConnexionVue
+from view.auth.creation_compte_vue import CreationCompteVue
+from view.consulter.consulter_evenement_vue import ConsulterVue
+# On importera la vue admin plus tard
+# from view.admin.connexion_admin_vue import ConnexionAdminVue
 
 class AccueilVue(VueAbstraite):
-    """Vue d'accueil de l'application"""
+    
+    # ... (__init__ et afficher ne changent PAS) ...
+    # Laisse-les comme ils sont. C'est choisir_menu qui change.
 
     def choisir_menu(self):
-        """Choix du menu suivant
-
-        Return
-        ------
-        view
-            Retourne la vue choisie par l'utilisateur dans le terminal
         """
+        Choix du menu suivant.
+        Devient un AIGUILLEUR si l'utilisateur est connecté.
+        """
+        self.user = Session().utilisateur # On met à jour self.user
 
-        print("\n" + "-" * 50 + "\nAccueil\n" + "-" * 50 + "\n")
+        # --- PARTIE 1 : AIGUILLAGE ---
+        if self.user:
+            # L'utilisateur EST connecté
+            if self.user.administrateur:
+                # C'est un ADMIN
+                print("🚧 (TODO : Redirection vers le Menu Admin 2.2)")
+                # return ConnexionAdminVue()
+                
+                # Pour l'instant, on le déconnecte pour éviter les bugs
+                Session().deconnexion()
+                return AccueilVue("Menu Admin non implémenté. Déconnexion.")
+                
+            else:
+                # C'est un CLIENT (non-admin)
+                # On le redirige direct vers le menu client 2.1
+                return ConnexionClientVue(f"Bienvenue {self.user.prenom} !")
 
+        # --- PARTIE 2 : MENU NON-CONNECTÉ ---
+        # Si on arrive ici, c'est que self.user était None.
+        
+        message = "Faites votre choix :"
+        choices_list = [
+            "Consulter les événements",
+            "Se connecter",
+            "Créer un compte",
+            "Quitter",
+        ]
+
+        print("\n" + "-" * 50 + "\n🚌 Shotgun ENSAI\n" + "-" * 50 + "\n")
         choix = inquirer.select(
-            message="Faites votre choix : ",
-            choices=[
-                "Créer un compte",
-                "Se connecter",
-                "Consulter les événements",
-                "Créer les événements",
-                "Quitter",
-            ],
+            message=message,
+            choices=choices_list,
         ).execute()
 
+        # Gestion du choix non-connecté
         match choix:
             case "Quitter":
-                pass
-
+                return None
+            case "Consulter les événements":
+                return ConsulterVue()
             case "Se connecter":
                 from view.auth.connexion_vue import ConnexionVue
                 return ConnexionVue("Connexion à l'application")
-
             case "Créer un compte":
                 from view.auth.creation_compte_vue import CreationCompteVue
-                return CreationCompteVue("Création de compte joueur")
-
-            case "Consulter les événements":  # Je sais pas comment on fait ça
-                from view.consulter.consulter_evenement_vue import ConsulterVue
-                return ConsulterVue()
-
-            case "Créer les événements":
-                from view.evenement.creer_evenement_vue import CreerEvenementVue
-                return CreerEvenementVue()
-
-            case "Ré-initialiser la base de données":  # On garde ça ??
-                succes = ResetDatabase().lancer()
-                message = (
-                    f"Ré-initilisation de la base de données - {'SUCCES' if succes else 'ECHEC'}"
-                )
-                return AccueilVue(message)
+                return CreationCompteVue("Création de compte")

@@ -4,7 +4,6 @@ from typing import Optional
 from getpass import getpass
 import logging
 
-from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 from dao.UtilisateurDAO import UtilisateurDao
 
@@ -26,7 +25,9 @@ class ConnexionVue:
         print(self.titre.center(50))
         print("-" * 50)
 
-    def choisir_menu(self) -> Optional[AccueilVue]:
+    def choisir_menu(self) -> Optional["AccueilVue"]:
+        from view.accueil.accueil_vue import AccueilVue
+
         # --- Saisie ---
         email = input("Email : ").strip()
         mot_de_passe = input("Mot de passe : ")

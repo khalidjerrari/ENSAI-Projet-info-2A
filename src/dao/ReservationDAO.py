@@ -1,7 +1,8 @@
 # dao/reservation_dao.py
 from dao.db_connection import DBConnection
 from model.reservation_models import ReservationModelOut
-
+from model.reservation_models import ReservationModelIn
+from typing import List, Optional
 
 class ReservationDao:
     """
@@ -51,3 +52,49 @@ class ReservationDao:
                 )
             )
         return reservations
+
+    def create(self, reservation_in: ReservationModelIn) -> Optional[ReservationModelOut]:
+        """
+        Crée une nouvelle réservation dans la base de données.
+        """
+        
+        query = (
+            "INSERT INTO reservation (fk_utilisateur, fk_transport, adherent, sam, boisson) "
+            "VALUES (%(fk_utilisateur)s, %(fk_transport)s, %(adherent)s, %(sam)s, %(boisson)s) "
+            "RETURNING id_reservation, date_reservation"
+        )
+        
+        params = {
+            "fk_utilisateur": reservation_in.fk_utilisateur,
+            "fk_transport": reservation_in.fk_transport,
+            "adherent": reservation_in.adherent,
+            "sam": reservation_in.sam,
+            "boisson": reservation_in.boisson
+        }
+
+        with DBConnection().getConnexion() as connection:
+            with connection.cursor(dictionary=True) as cursor:
+                try:
+                    cursor.execute(query, params)
+                    row = cursor.fetchone() 
+                    if row is None:
+                        return None # L'insertion a échoué
+                    
+                    connection.commit()
+                    
+                    return ReservationModelOut(
+                        id_reservation=row["id_reservation"],
+                        date_reservation=row["date_reservation"],
+                        fk_utilisateur=reservation_in.fk_utilisateur,
+                        fk_transport=reservation_in.fk_transport,
+                        adherent=reservation_in.adherent,
+                        sam=reservation_in.sam,
+                        boisson=reservation_in.boisson
+                    )
+                
+                except Exception as e:
+                    # Si la réservation existe déjà (contrainte unique), 
+                    # ou autre erreur SQL.
+                    connection.rollback() # On annule la transaction
+                    print(f"Erreur DAO lors de la création de la réservation : {e}")
+                    return None

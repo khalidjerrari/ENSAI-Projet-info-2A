@@ -7,6 +7,7 @@ from view.consulter.consulter_evenement_vue import ConsulterVue
 from view.auth.suppression_compte_vue import SuppressionCompteVue
 from view.auth.modification_compte_vue import ModificationCompteVue
 from view.reservations.modification_reservations_vue import ModificationReservationVue
+from view.reservations.suppression_reservations_vue import SuppressionReservationVue
 
 
 class ConnexionClientVue(VueAbstraite):
@@ -57,7 +58,7 @@ class ConnexionClientVue(VueAbstraite):
                 return ModificationReservationVue()
             
             case "Supprimer mes réservations":
-                return ModificationReservationVue()
+                return SuppressionReservationVue()
 
             case "Supprimer mon compte":
                 return SuppressionCompteVue()

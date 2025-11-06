@@ -9,10 +9,8 @@ from unittest.mock import patch
 from utils.reset_database2 import ResetDatabase
 from utils.securite import hash_password
 
-from 
 from dao.ParticipantDAO import ParticipantDao
-from business_object.Participant import Participant
-from model.participant_models import ParticipantModelOut, ParticipanrModelIn
+from model.participant_models import ParticipantModelOut, ParticipantModelIn
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -24,7 +22,7 @@ def setup_test_environment():
 
 
 def test_find_all():
-    """ Récupère la liste des utilisateurs """
+    """ Récupère la liste des participants """
 
     # GIVEN
 
@@ -39,7 +37,7 @@ def test_find_all():
 
 
 def test_find_by_id():
-    """Recherche par id d'un utilisateur existant"""
+    """Recherche par id d'un participant existant"""
 
     # GIVEN
     id_utilisateur = 3
@@ -51,43 +49,36 @@ def test_find_by_id():
     assert participant is not None
 
 
-#Pas fait après cette ligne ---------------------------------------------------------------
-
 def test_find_by_email():
-    """Recherche d'un utilisateur par son email"""
+    """Recherche d'un participant par son email"""
 
     # GIVEN
     email = "alice.dupont@email.com"
 
     # WHEN
-    utilisateur = UtilisateurDao().find_by_email(email)
+    participant = ParticipantDao().find_by_email(email)
 
     # THEN
-    assert utilisateur is not None
+    assert participant is not None
 
 
 def test_create():
-    """ Création d'un utilisateur """
+    """ Création d'un participant """
 
     # GIVEN
-    email = f"marie.martin.{uuid.uuid4().hex[:8]}@example.com"
-    utilisateur = UtilisateurModelIn(
-        email=email,
-        prenom="Marie",
-        nom="Martin",
-        telephone="0612345678",
-        mot_de_passe="$2b$12$xagP1GoNLUNNYm8WIAqVRO7Z3HAIrOLFKxwLDAnu5oak/fyWkknDi",
-        administrateur=True
-        )
+    email = f"julie.durand.{uuid.uuid4().hex[:8]}@email.com"
+    participant = ParticipantModelIn(nom="Durand", prenom="Julie", telephone="0660066006",
+                                     email=email,
+                                     mot_de_passe="$2b$12$8H8eLcG1RXpzPvPtksm.debZkvArykH1trBf76pLM9KC3d8Tm3f82")
 
     # WHEN
-    creation_ok = UtilisateurDao().create(utilisateur)
+    creation_ok = ParticipantDao().create(participant)
 
     # THEN
     assert creation_ok
-    utilisateur_en_base = UtilisateurDao().find_by_email(email)
-    assert utilisateur_en_base is not None
-    assert utilisateur_en_base.prenom == "Marie"
+    participant_en_base = ParticipantDao().find_by_email(email)
+    assert participant_en_base is not None
+    assert participant_en_base.prenom == "Julie"
 
 
 def test_update():
@@ -95,13 +86,13 @@ def test_update():
 
     # GIVEN
     new_mail = "alice.dupont@gmail.com"
-    utilisateur = UtilisateurModelOut(id_utilisateur=1, email=new_mail, prenom="Alice", nom="Dupont",
-                                      telephone="0612345678",
-                                      mot_de_passe="$2b$12$xagP1GoNLUNNYm8WIAqVRO7Z3HAIrOLFKxwLDAnu5oak/fyWkknDi",
-                                      administrateur=True, date_creation=datetime.now())
+    participant = ParticipantModelOut(id_utilisateur=1, email=new_mail, prenom="Alice",
+                                      nom="Dupont", telephone="0612345678",
+                                      mot_de_passe="",
+                                      administrateur=False, date_creation=datetime.now())
 
     # WHEN
-    modification_ok = UtilisateurDao().update(utilisateur)
+    modification_ok = ParticipantDao().update(participant)
 
     # THEN
     assert modification_ok
@@ -111,12 +102,12 @@ def test_delete():
     """ Supprime un utilisateur """
 
     # GIVEN
-    dao = UtilisateurDao()
-    utilisateur = dao.find_by_id(5)
-    assert utilisateur is not None
+    dao = ParticipantDao()
+    participant = dao.find_by_id(5)
+    assert participant is not None
 
     # WHEN
-    suppression_ok = UtilisateurDao().delete(utilisateur.id_utilisateur)
+    suppression_ok = ParticipantDao().delete(participant.id_utilisateur)
 
     # THEN
     assert suppression_ok

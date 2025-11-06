@@ -1,4 +1,4 @@
-from Utilisateur import Utilisateur
+from business_object.Utilisateur import Utilisateur
 
 
 class Participant(Utilisateur):

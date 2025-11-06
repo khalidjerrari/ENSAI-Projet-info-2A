@@ -8,6 +8,11 @@ from dao.ReservationDAO import ReservationDao
 from dao.Consultation_evenementDAO import ConsultationEvenementDao
 from model.reservation_models import ReservationModelIn
 
+# ➕ Ajout pour l'e-mail
+from dotenv import load_dotenv
+from utils.api_brevo import send_email_brevo
+load_dotenv()
+
 
 class ReservationVue(VueAbstraite):
     def __init__(self, evenement: Any, message: str = ""):
@@ -89,8 +94,7 @@ class ReservationVue(VueAbstraite):
             return ConnexionClientVue("Erreur lors de la réservation.")
 
         try:
-            # ❌ AVANT: reponses = inquirer.prompt(questions)
-            # ✅ MAINTENANT: on exécute chaque question séparément
+            # Saisie des options
             bus_aller  = inquirer.confirm(message="Souhaitez-vous le bus ALLER ?",  default=False, amark="✓").execute()
             bus_retour = inquirer.confirm(message="Souhaitez-vous le bus RETOUR ?", default=False, amark="✓").execute()
             adherent   = inquirer.confirm(message="Êtes-vous adhérent ?",           default=False, amark="✓").execute()
@@ -114,6 +118,47 @@ class ReservationVue(VueAbstraite):
             nouvelle_reservation = self.dao_resa.create(reservation_in)
 
             if nouvelle_reservation:
+                # ------- ENVOI EMAIL DE CONFIRMATION (best-effort) -------
+                try:
+                    titre = self._get_attr(self.evenement, "titre", "N/A")
+                    date_evt = self._get_attr(self.evenement, "date_evenement", "N/A")
+                    ville = self._get_attr(self.evenement, "ville")
+                    adresse = self._get_attr(self.evenement, "adresse")
+                    lieu = ville or adresse or "Lieu non renseigné"
+
+                    subject = "Confirmation de réservation — BDE Ensai"
+                    options = []
+                    if bus_aller:  options.append("Bus aller")
+                    if bus_retour: options.append("Bus retour")
+                    if adherent:   options.append("Adhérent")
+                    if sam:        options.append("SAM")
+                    if boisson:    options.append("Boisson")
+                    options_str = ", ".join(options) if options else "Aucune option"
+
+                    message_text = (
+                        f"Bonjour {user.prenom} {user.nom},\n\n"
+                        f"Votre réservation #{nouvelle_reservation.id_reservation} a bien été enregistrée.\n\n"
+                        f"Événement : {titre}\n"
+                        f"Date      : {date_evt}\n"
+                        f"Lieu      : {lieu}\n"
+                        f"Options   : {options_str}\n\n"
+                        "Si vous n'êtes pas à l'origine de cette action, merci de nous contacter.\n\n"
+                        "— L’équipe du BDE Ensai"
+                    )
+
+                    status, response = send_email_brevo(
+                        to_email=user.email,
+                        subject=subject,
+                        message_text=message_text,
+                    )
+                    if 200 <= status < 300:
+                        print("📧 Un e-mail de confirmation vous a été envoyé.")
+                    else:
+                        print(f"⚠️  Attention : l'e-mail de confirmation n'a pas pu être envoyé (HTTP {status}).")
+                except Exception as exc:
+                    print(f"⚠️  Impossible d'envoyer l'e-mail de confirmation : {exc}")
+                # --------------------------------------------------------
+
                 msg = f"🎉 Réservation #{nouvelle_reservation.id_reservation} confirmée pour cet événement !"
             else:
                 msg = "❌ Échec. Vous avez peut-être déjà une réservation enregistrée."

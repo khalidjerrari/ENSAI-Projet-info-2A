@@ -2,6 +2,8 @@ import requests
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 
 def send_email_brevo(to_email, subject, message_text):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -36,3 +38,12 @@ if __name__ == "__main__":
     print("Statut :", status)
     print("Réponse :", response)
 """
+
+status, response = send_email_brevo(
+    to_email="khalid.jerrari@gmail.com",
+    subject="Hello depuis Brevo",
+    message_text="Voici un email envoyé avec l'API de Brevo en Python !"
+    )
+
+print("Statut :", status)
+print("Réponse :", response)

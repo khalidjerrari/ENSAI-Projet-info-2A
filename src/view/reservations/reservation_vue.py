@@ -1,79 +1,125 @@
-# src/view/reservations/reservation_vue.py
+from typing import Optional, Any, Dict, List
+from datetime import date
 from InquirerPy import inquirer
-from InquirerPy.validator import EmptyInputValidator
 
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 from dao.ReservationDAO import ReservationDao
+from dao.Consultation_evenementDAO import ConsultationEvenementDao
 from model.reservation_models import ReservationModelIn
 
+
 class ReservationVue(VueAbstraite):
-    """
-    Vue pour la confirmation d'une réservation.
-    """
-    def __init__(self, evenement: dict, message=""):
+    def __init__(self, evenement: Any, message: str = ""):
         super().__init__(message)
-        self.user = Session().utilisateur
-        self.dao = ReservationDao()
-        self.evenement = evenement
-        self.fk_transport = evenement.get("fk_transport") # On récupère l'ID du transport
+        self.dao_resa = ReservationDao()
+        self.dao_ev = ConsultationEvenementDao()
+
+        self._evenement_orig = evenement
+        self.id_evenement: Optional[int] = self._extract_id_evenement(evenement)
+        self.evenement = self._fetch_evenement(self.id_evenement)
+
+    @staticmethod
+    def _extract_id_evenement(evenement: Any) -> Optional[int]:
+        if evenement is None:
+            return None
+        if isinstance(evenement, dict):
+            return evenement.get("id_evenement") or evenement.get("id") or None
+        return getattr(evenement, "id_evenement", None) or getattr(evenement, "id", None)
+
+    @staticmethod
+    def _get_attr(ev: Any, key: str, default=None):
+        if ev is None:
+            return default
+        if isinstance(ev, dict):
+            return ev.get(key, default)
+        return getattr(ev, key, default)
+
+    def _fetch_evenement(self, id_evenement: Optional[int]):
+        if not id_evenement:
+            return None
+        try:
+            dispo = self.dao_ev.lister_avec_places_restantes(limit=200, a_partir_du=date.today())
+            for row in dispo:
+                if row.get("id_evenement") == id_evenement:
+                    return row
+        except Exception:
+            pass
+        try:
+            tous = self.dao_ev.lister_tous(limit=500)
+            for ev in tous:
+                if getattr(ev, "id_evenement", None) == id_evenement:
+                    return ev
+        except Exception:
+            pass
+        return self._evenement_orig
 
     def afficher(self):
         super().afficher()
-        
-        if not self.evenement or not self.fk_transport:
-            print("Erreur : Aucun événement ou transport sélectionné.")
+        user = Session().utilisateur
+        if not user:
+            print("Erreur : Vous n'êtes plus connecté.")
+            return
+        if not self.id_evenement or not self.evenement:
+            print("Erreur : Aucun événement sélectionné.")
             return
 
+        titre = self._get_attr(self.evenement, "titre", "N/A")
+        date_evt = self._get_attr(self.evenement, "date_evenement", "N/A")
+        ville = self._get_attr(self.evenement, "ville")
+        adresse = self._get_attr(self.evenement, "adresse")
+        lieu = ville or adresse or "N/A"
+
+        capacite = self._get_attr(self.evenement, "capacite")
+        places_restantes = self.evenement.get("places_restantes") if isinstance(self.evenement, dict) else None
+
+        capa_str = f" | Capacité : {capacite}" if capacite is not None else ""
+        places_str = f" | Places restantes : {places_restantes}" if places_restantes is not None else ""
+
         print(f"--- ✅ Confirmer la réservation ---")
-        print(f"Événement : {self.evenement.get('titre')}")
-        print(f"Date      : {self.evenement.get('date_evenement')}")
-        print(f"Lieu      : {self.evenement.get('ville') or self.evenement.get('adresse') or 'N/A'}")
+        print(f"Événement : {titre}")
+        print(f"Date      : {date_evt}")
+        print(f"Lieu      : {lieu}{capa_str}{places_str}")
 
-
-    def choisir_menu(self):
-        # On importe ici pour éviter les boucles
+    def choisir_menu(self) -> Optional[VueAbstraite]:
         from view.client.connexion_client_vue import ConnexionClientVue
-        
-        if not self.user or not self.fk_transport:
+
+        user = Session().utilisateur
+        if not user or not self.id_evenement:
             return ConnexionClientVue("Erreur lors de la réservation.")
 
-        # On pose les questions "Sam? Boisson?" etc.
         try:
-            questions = [
-                inquirer.confirm(message="Êtes-vous adhérent ?", default=False, amark="✓"),
-                inquirer.confirm(message="Êtes-vous SAM ce soir ?", default=False, amark="✓"),
-                inquirer.confirm(message="Prenez-vous une boisson ?", default=False, amark="✓"),
-                inquirer.confirm(message="Confirmer la réservation ?", default=True, amark="✓")
-            ]
-            
-            reponses = inquirer.prompt(questions)
-            
-            # Si l'utilisateur n'a pas confirmé
-            if not reponses[3]:
+            # ❌ AVANT: reponses = inquirer.prompt(questions)
+            # ✅ MAINTENANT: on exécute chaque question séparément
+            bus_aller  = inquirer.confirm(message="Souhaitez-vous le bus ALLER ?",  default=False, amark="✓").execute()
+            bus_retour = inquirer.confirm(message="Souhaitez-vous le bus RETOUR ?", default=False, amark="✓").execute()
+            adherent   = inquirer.confirm(message="Êtes-vous adhérent ?",           default=False, amark="✓").execute()
+            sam        = inquirer.confirm(message="Êtes-vous SAM ce soir ?",        default=False, amark="✓").execute()
+            boisson    = inquirer.confirm(message="Prenez-vous une boisson ?",      default=False, amark="✓").execute()
+            confirme   = inquirer.confirm(message="Confirmer la réservation ?",      default=True,  amark="✓").execute()
+
+            if not confirme:
                 return ConnexionClientVue("Réservation annulée.")
 
-            # 1. On crée l'objet "formulaire"
             reservation_in = ReservationModelIn(
-                fk_utilisateur=self.user.id_utilisateur,
-                fk_transport=self.fk_transport,
-                adherent=reponses[0],
-                sam=reponses[1],
-                boisson=reponses[2]
+                fk_utilisateur=user.id_utilisateur,
+                fk_evenement=self.id_evenement,
+                bus_aller=bus_aller,
+                bus_retour=bus_retour,
+                adherent=adherent,
+                sam=sam,
+                boisson=boisson,
             )
 
-            # 2. On appelle le DAO pour créer la réservation
-            nouvelle_reservation = self.dao.create(reservation_in)
+            nouvelle_reservation = self.dao_resa.create(reservation_in)
 
             if nouvelle_reservation:
-                msg = f"🎉 Réservation #{nouvelle_reservation.id_reservation} confirmée !"
+                msg = f"🎉 Réservation #{nouvelle_reservation.id_reservation} confirmée pour cet événement !"
             else:
-                # L'erreur la plus probable est la contrainte UNIQUE
-                # (l'utilisateur a déjà réservé ce trajet)
-                msg = "❌ Échec. Vous avez peut-être déjà réservé ce trajet."
+                msg = "❌ Échec. Vous avez peut-être déjà une réservation enregistrée."
 
-            return ConnexionClientVue(msg) # On retourne au menu client
-        
+            return ConnexionClientVue(msg)
+
         except Exception as e:
             print(f"Erreur inattendue : {e}")
             return ConnexionClientVue("Une erreur est survenue.")

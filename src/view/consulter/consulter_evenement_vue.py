@@ -22,7 +22,15 @@ class ConsulterVue(VueAbstraite):
         from view.session import Session
         
         user = Session().utilisateur
-        vue_de_retour = ConnexionClientVue if user else AccueilVue
+        
+        if user:
+            if getattr(user, "administrateur", False):
+                from view.administrateur.connexion_admin_vue import ConnexionAdminVue 
+                vue_de_retour = ConnexionAdminVue
+            else:
+                vue_de_retour = ConnexionClientVue
+        else:
+            vue_de_retour = AccueilVue
         
         menu_choix = {
             "Lister les événements disponibles (places restantes)": "places",
@@ -58,7 +66,7 @@ class ConsulterVue(VueAbstraite):
 
             # --- 2. On vérifie si la liste est vide ---
             if not events:
-                print("\n😕 Aucun événement ne correspond à votre recherche.")
+                print("\n Aucun événement ne correspond à votre recherche.")
                 input("\n(Entrée) pour continuer...")
                 return self
 
@@ -96,6 +104,6 @@ class ConsulterVue(VueAbstraite):
             return ReservationVue(evenement=event_selectionne)
 
         except Exception as e:
-            print(f"❌ Erreur lors de la récupération des événements : {e}")
+            print(f"Erreur lors de la récupération des événements : {e}")
             input("(Entrée) pour continuer...")
             return self

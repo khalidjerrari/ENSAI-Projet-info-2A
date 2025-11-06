@@ -6,6 +6,7 @@ from view.session import Session
 from view.consulter.consulter_evenement_vue import ConsulterVue
 from view.evenement.creer_evenement_vue import CreerEvenementVue
 from view.evenement.modifier_evenement_vue import ModifierEvenementVue
+from view.evenement.supprimer_evenement_vue import SupprimerEvenementVue
 # On importera la vue des réservations plus tard
 # from view.reservations.mes_reservations_vue import MesReservationsVue
 
@@ -61,7 +62,7 @@ class ConnexionAdminVue(VueAbstraite):
                 return ModifierEvenementVue
 
             case "Supprimer un événement":
-                return "en cours d'implémentation"
+                return SupprimerEvenementVue
             
             case "Retour (Se déconnecter)":
                 Session().deconnexion()

@@ -4,13 +4,14 @@ from view.reservations.mes_reservations_vue import MesReservationsVue
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 from view.consulter.consulter_evenement_vue import ConsulterVue
+from view.evenement.creer_evenement_vue import CreerEvenementVue
 # On importera la vue des réservations plus tard
 # from view.reservations.mes_reservations_vue import MesReservationsVue
 
 
-class ConnexionClientVue(VueAbstraite):
+class ConnexionAdminVue(VueAbstraite):
     """
-    Vue pour le menu d'un utilisateur non-admin (client).
+    Vue pour le menu d'un utilisateur admin
     """
     def __init__(self, message=""):
         super().__init__(message)
@@ -30,9 +31,12 @@ class ConnexionClientVue(VueAbstraite):
         # Construction du message d'accueil et des choix
         message = f"Connecté en tant que : {self.user.prenom} {self.user.nom}"
         choices = [
-            "Consulter les événements", # 2.1.1
-            "Consulter mes réservations", # 2.1.2
-            "Retour (Se déconnecter)" # 2.1.3 (Quitter)
+            "Consulter les événements",
+            "Consulter mes réservations",
+            "Créer un événement",
+            "Mofidier un événement",
+            "Supprimer un événement",
+            "Retour (Se déconnecter)"
         ]
 
         # Affichage du menu InquirerPy
@@ -48,6 +52,15 @@ class ConnexionClientVue(VueAbstraite):
             
             case "Consulter mes réservations":
                 return MesReservationsVue()
+
+            case "Créer un événement":
+                return CreerEvenementVue()
+            
+            case "Mofidier un événement":
+                return "en cours d'implémentation"
+
+            case "Supprimer un événement":
+                return "en cours d'implémentation"
             
             case "Retour (Se déconnecter)":
                 Session().deconnexion()

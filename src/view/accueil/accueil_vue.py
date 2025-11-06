@@ -3,6 +3,7 @@
 # ... (tous tes imports en haut) ...
 # AJOUTE L'IMPORT DE LA NOUVELLE VUE :
 from view.client.connexion_client_vue import ConnexionClientVue
+
 # --- Imports en haut du fichier ---
 from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
@@ -29,13 +30,10 @@ class AccueilVue(VueAbstraite):
         if self.user:
             # L'utilisateur EST connecté
             if self.user.administrateur:
+                from view.administrateur.connexion_admin_vue import ConnexionAdminVue
                 # C'est un ADMIN
-                print("🚧 (TODO : Redirection vers le Menu Admin 2.2)")
                 # return ConnexionAdminVue()
-                
-                # Pour l'instant, on le déconnecte pour éviter les bugs
-                Session().deconnexion()
-                return AccueilVue("Menu Admin non implémenté. Déconnexion.")
+                return ConnexionAdminVue(f"Bienvenue {self.user.prenom} !")
                 
             else:
                 # C'est un CLIENT (non-admin)

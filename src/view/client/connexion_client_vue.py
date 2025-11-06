@@ -6,6 +6,7 @@ from view.session import Session
 from view.consulter.consulter_evenement_vue import ConsulterVue
 from view.auth.suppression_compte_vue import SuppressionCompteVue
 from view.auth.modification_compte_vue import ModificationCompteVue
+from view.reservations.modification_reservations_vue import ModificationReservationVue
 
 
 class ConnexionClientVue(VueAbstraite):
@@ -33,6 +34,8 @@ class ConnexionClientVue(VueAbstraite):
         choices = [
             "Consulter les événements",
             "Consulter mes réservations",
+            "Modifier mes réservations",
+            "Supprimer mes réservations",
             "Supprimer mon compte",
             "Modifier mon compte",
             "Retour (Se déconnecter)"
@@ -49,6 +52,12 @@ class ConnexionClientVue(VueAbstraite):
 
             case "Consulter mes réservations":
                 return MesReservationsVue()
+            
+            case "Modifier mes réservations":
+                return ModificationReservationVue()
+            
+            case "Supprimer mes réservations":
+                return ModificationReservationVue()
 
             case "Supprimer mon compte":
                 return SuppressionCompteVue()

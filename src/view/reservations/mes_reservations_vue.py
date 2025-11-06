@@ -89,7 +89,7 @@ class MesReservationsVue(VueAbstraite):
                 )
 
         except Exception as e:
-            print(f"\n❌ Erreur lors de la récupération de vos réservations : {e}")
+            print(f"\n Erreur lors de la récupération de vos réservations : {e}")
 
     def choisir_menu(self):
         # Import local pour éviter la boucle circulaire

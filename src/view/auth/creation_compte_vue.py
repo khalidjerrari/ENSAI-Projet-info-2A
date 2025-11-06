@@ -13,6 +13,10 @@ from model.utilisateur_models import (
     UtilisateurModelOut,
 )
 
+from dotenv import load_dotenv
+from utils.api_brevo import send_email_brevo
+load_dotenv()
+
 
 class CreationCompteVue:
     """
@@ -93,30 +97,28 @@ class CreationCompteVue:
         
         # --- ENVOI DE L'E-MAIL DE CONFIRMATION ---
         # AJOUT : import de l'envoi d'e-mail
-        #from dotenv import load_dotenv
-        #from utils.api_brevo import send_email_brevo
-        #load_dotenv()
-        #try:
-        #    subject = "Confirmation de création de compte — BDE Ensai"
-        #    message_text = (
-        #        f"Bonjour {user_out.prenom} {user_out.nom},\n\n"
-        #        "Votre compte a été créé avec succès.\n\n"
-        #        "Vous pouvez désormais vous connecter et réserver vos événements.\n\n"
-        #        "Si vous n'êtes pas à l'origine de cette action, veuillez nous contacter.\n\n"
-        #        "— L’équipe du BDE Ensai"
-        #    )
-        #    status, response = send_email_brevo(
-        #        to_email=user_out.email,
-        #        subject=subject,
-        #        message_text=message_text,
-        #    )
-        #    if status >= 200 and status < 300:
-        #        print("Un e-mail de confirmation vous a été envoyé 🎉")
-        #    else:
-        #        print(f"Attention : l'e-mail de confirmation n'a pas pu être envoyé (HTTP {status}).")
-        #except Exception as exc:
-        #    # On ne bloque pas la création si l'e-mail échoue
-        #    print(f"Impossible d'envoyer l'e-mail de confirmation : {exc}")
+
+        try:
+            subject = "Confirmation de création de compte — BDE Ensai"
+            message_text = (
+                f"Bonjour {user_out.prenom} {user_out.nom},\n\n"
+                "Votre compte a été créé avec succès.\n\n"
+                "Vous pouvez désormais vous connecter et réserver vos événements.\n\n"
+                "Si vous n'êtes pas à l'origine de cette action, veuillez nous contacter.\n\n"
+                "— L’équipe du BDE Ensai"
+            )
+            status, response = send_email_brevo(
+                to_email=user_out.email,
+                subject=subject,
+                message_text=message_text,
+            )
+            if status >= 200 and status < 300:
+                print("Un e-mail de confirmation vous a été envoyé 🎉")
+            else:
+                print(f"Attention : l'e-mail de confirmation n'a pas pu être envoyé (HTTP {status}).")
+        except Exception as exc:
+            # On ne bloque pas la création si l'e-mail échoue
+            print(f"Impossible d'envoyer l'e-mail de confirmation : {exc}")
 
         return AccueilVue("Compte créé — bienvenue !")
 

@@ -90,21 +90,12 @@ class ModifierEvenementVue(VueAbstraite):
         print(f"  - Capacité     : {evt.capacite}")
         print(f"  - Catégorie    : {evt.categorie or '—'}")
         print(f"  - Statut       : {evt.statut}")
-        print(f"  - Transport ID : {evt.fk_transport}")
         print(f"  - Utilisateur  : {evt.fk_utilisateur or 'NULL'}")
         print(f"  - Créé le      : {evt.date_creation}")
 
         # --- Saisie des nouvelles valeurs ---
         # Convention : laisser vide => conserver / entrer '-' => effacer (NULL) pour champs optionnels
         try:
-            # fk_transport (obligatoire)
-            fk_transport_str = inquirer.text(
-                message=f"ID transport (actuel: {evt.fk_transport}) — vide=conserver :",
-                validate=lambda t: (t == "" or t.isdigit()) or "Entrez un entier ou laissez vide",
-                default="",
-            ).execute()
-            fk_transport = evt.fk_transport if fk_transport_str == "" else int(fk_transport_str)
-
             # Titre (obligatoire)
             titre = inquirer.text(
                 message=f"Titre (actuel: {evt.titre}) — vide=conserver :",
@@ -165,18 +156,22 @@ class ModifierEvenementVue(VueAbstraite):
                 default=evt.statut if evt.statut in STATUTS else "pas encore finalisé",
             ).execute()
 
-            # fk_utilisateur : par défaut on conserve l'existant
+            # fk_utilisateur : désormais nullable (ON DELETE SET NULL)
             fk_utilisateur_str = inquirer.text(
-                message=f"ID utilisateur (actuel: {evt.fk_utilisateur or 'NULL'}) — vide=conserver :",
-                validate=lambda t: (t == "" or t.isdigit()) or "Entrez un entier ou laissez vide",
+                message=f"ID utilisateur (actuel: {evt.fk_utilisateur or 'NULL'}) — vide=conserver, '-'=NULL :",
+                validate=lambda t: (t in ('', '-') or t.isdigit()) or "Entrez un entier, vide, ou '-'",
                 default="",
             ).execute()
-            fk_utilisateur = evt.fk_utilisateur if fk_utilisateur_str == "" else int(fk_utilisateur_str)
+            if fk_utilisateur_str == "":
+                fk_utilisateur = evt.fk_utilisateur
+            elif fk_utilisateur_str == "-":
+                fk_utilisateur = None
+            else:
+                fk_utilisateur = int(fk_utilisateur_str)
 
-            # --- Construction du modèle pour l'update ---
+            # --- Construction du modèle pour l'update (sans fk_transport) ---
             evt_out = EvenementModelOut(
                 id_evenement=evt.id_evenement,
-                fk_transport=fk_transport,
                 fk_utilisateur=fk_utilisateur,
                 titre=titre,
                 adresse=adresse,

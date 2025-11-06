@@ -11,6 +11,9 @@ from view.vue_abstraite import VueAbstraite
 from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
+# ⚠️ Assure-toi que l'import correspond bien au nom de ton module/classe :
+# si ton fichier est dao/evenement_dao.py et la classe s'appelle EvenementDao,
+# préfère: from dao.evenement_dao import EvenementDao
 from dao.EvenementDAO import EvenementDao
 from model.evenement_models import EvenementModelIn
 
@@ -46,11 +49,6 @@ class CreerEvenementVue(VueAbstraite):
 
         # --- Saisie des champs ---
         try:
-            fk_transport = int(inquirer.text(
-                message="ID du transport lié (fk_transport) :",
-                validate=lambda t: t.isdigit() or "Entrez un entier",
-            ).execute())
-
             titre = inquirer.text(
                 message="Titre :",
                 validate=lambda t: len(t.strip()) > 0 or "Titre requis",
@@ -67,10 +65,12 @@ class CreerEvenementVue(VueAbstraite):
 
             description = inquirer.text(message="Description (optionnel) :").execute().strip() or None
 
-            capacite = int(inquirer.text(
-                message="Capacité :",
-                validate=lambda t: (t.isdigit() and int(t) > 0) or "Entrez un entier > 0",
-            ).execute())
+            capacite = int(
+                inquirer.text(
+                    message="Capacité :",
+                    validate=lambda t: (t.isdigit() and int(t) > 0) or "Entrez un entier > 0",
+                ).execute()
+            )
 
             categorie = inquirer.text(message="Catégorie (optionnel) :").execute().strip() or None
 
@@ -80,12 +80,11 @@ class CreerEvenementVue(VueAbstraite):
                 default="pas encore finalisé",
             ).execute()
 
-            # fk_utilisateur = admin courant
+            # fk_utilisateur = admin courant (nullable côté DB, mais on le renseigne ici)
             fk_utilisateur = user.id_utilisateur
 
-            # --- Construction du modèle d'entrée ---
+            # --- Construction du modèle d'entrée (sans fk_transport) ---
             evt_in = EvenementModelIn(
-                fk_transport=fk_transport,
                 fk_utilisateur=fk_utilisateur,
                 titre=titre,
                 adresse=adresse,
@@ -115,7 +114,7 @@ class CreerEvenementVue(VueAbstraite):
             evt_out = self.dao.create(evt_in)
         except Exception as e:
             logger.exception("Erreur DB création événement: %s", e)
-            print("Erreur lors de la création en base (transport inexistant ? doublon de contrainte ?).")
+            print("Erreur lors de la création en base (contrainte non respectée ?).")
             return AccueilVue("Échec création — retour au menu principal")
 
         print(f"Événement créé (id={evt_out.id_evenement}) : {evt_out.titre} — date {evt_out.date_evenement}")

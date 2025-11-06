@@ -1,24 +1,36 @@
 from datetime import date, datetime
-from pydantic import BaseModel, constr
-from typing import Optional
+from pydantic import BaseModel, constr, Field
+from typing import Optional, Literal
 
 
 class EvenementModelIn(BaseModel):
-    fk_transport: int
+    """
+    Modèle d'entrée pour la création d'un événement.
+    fk_utilisateur peut être None (ON DELETE SET NULL).
+    """
     fk_utilisateur: Optional[int] = None
     titre: constr(max_length=150)
-    adresse: Optional[constr(max_length=255)] = None
+    adresse: Optional[constr(max_length=100)] = None
     ville: Optional[constr(max_length=100)] = None
     date_evenement: date
     description: Optional[str] = None
-    capacite: int
+    capacite: int = Field(..., gt=0)
     categorie: Optional[constr(max_length=50)] = None
-    statut: Optional[str] = "pas encore finalisé"
+    statut: Optional[
+        Literal[
+            "disponible en ligne",
+            "déjà réalisé",
+            "annulé",
+            "pas encore finalisé"
+        ]
+    ] = "pas encore finalisé"
 
 
 class EvenementModelOut(BaseModel):
+    """
+    Modèle de sortie pour la lecture d'un événement.
+    """
     id_evenement: int
-    fk_transport: int
     fk_utilisateur: Optional[int] = None
     titre: str
     adresse: Optional[str] = None
@@ -27,5 +39,10 @@ class EvenementModelOut(BaseModel):
     description: Optional[str] = None
     capacite: int
     categorie: Optional[str] = None
-    statut: str
+    statut: Literal[
+        "disponible en ligne",
+        "déjà réalisé",
+        "annulé",
+        "pas encore finalisé"
+    ]
     date_creation: datetime

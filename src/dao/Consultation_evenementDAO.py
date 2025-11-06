@@ -1,6 +1,7 @@
-# dao/consultation_evenement_dao.py
 from typing import List, Optional, Dict, Any
 from datetime import date
+
+from psycopg2.extras import RealDictCursor
 
 from dao.db_connection import DBConnection
 from model.evenement_models import EvenementModelOut
@@ -9,7 +10,7 @@ from model.evenement_models import EvenementModelOut
 class ConsultationEvenementDao:
     """
     DAO de consultation (lecture seule) des événements.
-    Fournit des méthodes pratiques pour lister et filtrer les événements.
+    ✅ Minimalement adapté au nouveau schéma SQL (suppression de fk_transport, comptage par événement).
     """
 
     # ---------- Listes simples ----------
@@ -24,7 +25,7 @@ class ConsultationEvenementDao:
         Liste paginée de tous les événements.
         """
         query = (
-            "SELECT id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "SELECT id_evenement, fk_utilisateur, titre, adresse, ville, "
             "       date_evenement, description, capacite, categorie, statut, date_creation "
             "FROM evenement "
             f"ORDER BY {order_by} "
@@ -33,7 +34,7 @@ class ConsultationEvenementDao:
         params = {"limit": max(limit, 0), "offset": max(offset, 0)}
 
         with DBConnection().getConnexion() as con:
-            with con.cursor() as curs:
+            with con.cursor(cursor_factory=RealDictCursor) as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
 
@@ -57,7 +58,7 @@ class ConsultationEvenementDao:
             params["dmin"] = a_partir_du
 
         query = (
-            "SELECT id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "SELECT id_evenement, fk_utilisateur, titre, adresse, ville, "
             "       date_evenement, description, capacite, categorie, statut, date_creation "
             "FROM evenement "
             f"WHERE {' AND '.join(where)} "
@@ -66,7 +67,7 @@ class ConsultationEvenementDao:
         )
 
         with DBConnection().getConnexion() as con:
-            with con.cursor() as curs:
+            with con.cursor(cursor_factory=RealDictCursor) as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
 
@@ -112,7 +113,7 @@ class ConsultationEvenementDao:
 
         where_clause = f"WHERE {' AND '.join(where)} " if where else ""
         query = (
-            "SELECT id_evenement, fk_transport, fk_utilisateur, titre, adresse, ville, "
+            "SELECT id_evenement, fk_utilisateur, titre, adresse, ville, "
             "       date_evenement, description, capacite, categorie, statut, date_creation "
             "FROM evenement "
             f"{where_clause}"
@@ -121,7 +122,7 @@ class ConsultationEvenementDao:
         )
 
         with DBConnection().getConnexion() as con:
-            with con.cursor() as curs:
+            with con.cursor(cursor_factory=RealDictCursor) as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
 
@@ -138,9 +139,9 @@ class ConsultationEvenementDao:
     ) -> List[Dict[str, Any]]:
         """
         Liste des événements avec le calcul des places restantes :
-        places_restantes = capacite - COUNT(reservation.id_reservation) pour le transport lié.
+        places_restantes = capacite - COUNT(reservation.id_reservation) pour l'événement.
 
-        Retourne des dicts : {**EvenementModelOut, "places_restantes": int}
+        Retourne des dicts : {**EvenementModelOut fields..., "places_restantes": int}
         """
         where = []
         params: Dict[str, Any] = {"limit": max(limit, 0), "offset": max(offset, 0)}
@@ -153,31 +154,27 @@ class ConsultationEvenementDao:
 
         where_clause = f"WHERE {' AND '.join(where)} " if where else ""
 
-        # On compte les réservations par transport
+        # Comptage des réservations par événement (nouveau schéma)
         query = (
             "WITH resa AS ( "
-            "  SELECT fk_transport, COUNT(*) AS nb_resa "
+            "  SELECT fk_evenement, COUNT(*) AS nb_resa "
             "  FROM reservation "
-            "  GROUP BY fk_transport "
+            "  GROUP BY fk_evenement "
             ") "
-            "SELECT e.id_evenement, e.fk_transport, e.fk_utilisateur, e.titre, e.adresse, e.ville, "
+            "SELECT e.id_evenement, e.fk_utilisateur, e.titre, e.adresse, e.ville, "
             "       e.date_evenement, e.description, e.capacite, e.categorie, e.statut, e.date_creation, "
             "       (e.capacite - COALESCE(r.nb_resa, 0)) AS places_restantes "
             "FROM evenement e "
-            "LEFT JOIN resa r ON r.fk_transport = e.fk_transport "
+            "LEFT JOIN resa r ON r.fk_evenement = e.id_evenement "
             f"{where_clause}"
             "ORDER BY e.date_evenement ASC, e.id_evenement ASC "
             "LIMIT %(limit)s OFFSET %(offset)s"
         )
 
         with DBConnection().getConnexion() as con:
-            with con.cursor() as curs:
+            with con.cursor(cursor_factory=RealDictCursor) as curs:
                 curs.execute(query, params)
                 rows = curs.fetchall()
 
-        # On renvoie des dicts (EvenementModelOut + places_restantes)
-        result: List[Dict[str, Any]] = []
-        for row in rows:
-            item = dict(row)
-            result.append(item)
-        return result
+        # rows est déjà une liste de dicts (RealDictCursor)
+        return [dict(row) for row in rows]

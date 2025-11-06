@@ -1,4 +1,3 @@
-# view/evenement/supprimer_evenement_vue.py
 from __future__ import annotations
 from typing import Optional
 import logging
@@ -18,9 +17,9 @@ class SupprimerEvenementVue(VueAbstraite):
     """
     Vue de suppression d'un événement (réservée aux administrateurs).
 
-    Compatibilité :
-    - Appel en mode "classe" (ex: SupprimerEvenementVue.afficher()) via @classmethod
-    - Appel en mode "instance" via _afficher_impl() / _choisir_menu_impl()
+    ✅ Adaptée au nouveau schéma :
+      - Suppression de toute référence à `fk_transport` (champ supprimé de `evenement`).
+      - Rappel (informel) : `reservation` est ON DELETE CASCADE et `bus` est ON DELETE SET NULL.
     """
 
     def __init__(self) -> None:
@@ -83,9 +82,12 @@ class SupprimerEvenementVue(VueAbstraite):
         print(f"  - Date         : {evt.date_evenement}")
         print(f"  - Ville        : {evt.ville or '—'}")
         print(f"  - Statut       : {evt.statut}")
-        print(f"  - Transport ID : {evt.fk_transport}")
 
         # --- Confirmation ---
+        print("\n⚠️  Attention :")
+        print("   - Toutes les réservations liées à cet événement seront supprimées (ON DELETE CASCADE).")
+        print("   - Les bus liés verront leur événement remis à NULL (ON DELETE SET NULL).")
+
         confirm = inquirer.confirm(
             message="Confirmez-vous la suppression ?",
             default=False,

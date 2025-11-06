@@ -1,0 +1,242 @@
+# view/evenement/modifier_evenement_vue.py
+from __future__ import annotations
+from typing import Optional
+from datetime import date
+import logging
+
+from InquirerPy import inquirer
+from pydantic import ValidationError
+
+from view.vue_abstraite import VueAbstraite
+from view.accueil.accueil_vue import AccueilVue
+from view.session import Session
+
+# NOTE: garde le même import que dans ta vue de création pour rester cohérent
+from dao.EvenementDAO import EvenementDao
+from model.evenement_models import EvenementModelOut
+
+logger = logging.getLogger(__name__)
+
+STATUTS = [
+    "pas encore finalisé",
+    "disponible en ligne",
+    "déjà réalisé",
+    "annulé",
+]
+
+
+class ModifierEvenementVue(VueAbstraite):
+    """
+    Vue de modification d'un événement (réservée aux administrateurs).
+
+    Compatibilité :
+    - Appel en mode "classe" (ex: ModifierEvenementVue.afficher()) via @classmethod
+    - Appel en mode "instance" via _afficher_impl() / _choisir_menu_impl()
+    """
+
+    def __init__(self) -> None:
+        self.dao = EvenementDao()
+
+    # ---------- WRAPPERS : autorisent l'appel sur la classe ----------
+
+    @classmethod
+    def afficher(cls) -> None:
+        """Permet d'appeler ModifierEvenementVue.afficher() sans instance."""
+        return cls()._afficher_impl()
+
+    @classmethod
+    def choisir_menu(cls) -> Optional[AccueilVue]:
+        """Permet d'appeler ModifierEvenementVue.choisir_menu() sans instance."""
+        return cls()._choisir_menu_impl()
+
+    # ---------- Implémentations réelles (instance) ----------
+
+    def _afficher_impl(self) -> None:
+        print("\n" + "-" * 50)
+        print("Modification d’un événement".center(50))
+        print("-" * 50)
+
+    def _choisir_menu_impl(self) -> Optional[AccueilVue]:
+        sess = Session()
+        user = sess.utilisateur
+        if not sess.est_connecte() or not getattr(user, "administrateur", False):
+            print("Accès refusé : vous devez être administrateur.")
+            return AccueilVue("Accès refusé")
+
+        # --- Sélection de l'événement à modifier ---
+        try:
+            id_str = inquirer.text(
+                message="ID de l'événement à modifier :",
+                validate=lambda t: t.isdigit() or "Entrez un entier",
+            ).execute()
+            id_evenement = int(id_str)
+        except Exception as e:
+            logger.exception("Erreur saisie ID: %s", e)
+            print("ID invalide.")
+            return AccueilVue("Modification annulée — retour au menu principal")
+
+        evt = self.dao.find_by_id(id_evenement)
+        if evt is None:
+            print(f"Aucun événement trouvé pour id={id_evenement}.")
+            return AccueilVue("Introuvable — retour au menu principal")
+
+        # Récapitulatif avant modification
+        print("\nÉvénement courant :")
+        print(f"  - Titre        : {evt.titre}")
+        print(f"  - Date         : {evt.date_evenement}")
+        print(f"  - Adresse      : {evt.adresse or '—'}")
+        print(f"  - Ville        : {evt.ville or '—'}")
+        print(f"  - Description  : {'—' if not evt.description else '(existe)'}")
+        print(f"  - Capacité     : {evt.capacite}")
+        print(f"  - Catégorie    : {evt.categorie or '—'}")
+        print(f"  - Statut       : {evt.statut}")
+        print(f"  - Transport ID : {evt.fk_transport}")
+        print(f"  - Utilisateur  : {evt.fk_utilisateur or 'NULL'}")
+        print(f"  - Créé le      : {evt.date_creation}")
+
+        # --- Saisie des nouvelles valeurs ---
+        # Convention : laisser vide => conserver / entrer '-' => effacer (NULL) pour champs optionnels
+        try:
+            # fk_transport (obligatoire)
+            fk_transport_str = inquirer.text(
+                message=f"ID transport (actuel: {evt.fk_transport}) — vide=conserver :",
+                validate=lambda t: (t == "" or t.isdigit()) or "Entrez un entier ou laissez vide",
+                default="",
+            ).execute()
+            fk_transport = evt.fk_transport if fk_transport_str == "" else int(fk_transport_str)
+
+            # Titre (obligatoire)
+            titre = inquirer.text(
+                message=f"Titre (actuel: {evt.titre}) — vide=conserver :",
+                default="",
+            ).execute().strip()
+            if titre == "":
+                titre = evt.titre
+
+            # Adresse (optionnel)
+            adresse_in = inquirer.text(
+                message=f"Adresse (actuelle: {evt.adresse or '—'}) — vide=conserver, '-'=effacer :",
+                default="",
+            ).execute().strip()
+            adresse = _clean_optional_text(adresse_in, evt.adresse)
+
+            # Ville (optionnel)
+            ville_in = inquirer.text(
+                message=f"Ville (actuelle: {evt.ville or '—'}) — vide=conserver, '-'=effacer :",
+                default="",
+            ).execute().strip()
+            ville = _clean_optional_text(ville_in, evt.ville)
+
+            # Date (obligatoire)
+            date_prompt = f"Date (YYYY-MM-DD) (actuelle: {evt.date_evenement}) — vide=conserver :"
+            date_str = inquirer.text(
+                message=date_prompt,
+                validate=lambda t: (t == "" or _valid_date(t)) or "Format attendu YYYY-MM-DD",
+                default="",
+            ).execute()
+            date_evenement = evt.date_evenement if date_str == "" else date.fromisoformat(date_str)
+
+            # Description (optionnel)
+            description_in = inquirer.text(
+                message=f"Description (actuelle: {'—' if not evt.description else '(existe)'}) — vide=conserver, '-'=effacer :",
+                default="",
+            ).execute().strip()
+            description = _clean_optional_text(description_in, evt.description)
+
+            # Capacité (obligatoire > 0)
+            capacite_str = inquirer.text(
+                message=f"Capacité (actuelle: {evt.capacite}) — vide=conserver :",
+                validate=lambda t: (t == "" or (t.isdigit() and int(t) > 0)) or "Entrez un entier > 0",
+                default="",
+            ).execute()
+            capacite = evt.capacite if capacite_str == "" else int(capacite_str)
+
+            # Catégorie (optionnel)
+            categorie_in = inquirer.text(
+                message=f"Catégorie (actuelle: {evt.categorie or '—'}) — vide=conserver, '-'=effacer :",
+                default="",
+            ).execute().strip()
+            categorie = _clean_optional_text(categorie_in, evt.categorie)
+
+            # Statut (liste)
+            statut = inquirer.select(
+                message="Statut :",
+                choices=STATUTS,
+                default=evt.statut if evt.statut in STATUTS else "pas encore finalisé",
+            ).execute()
+
+            # fk_utilisateur : par défaut on conserve l'existant
+            fk_utilisateur_str = inquirer.text(
+                message=f"ID utilisateur (actuel: {evt.fk_utilisateur or 'NULL'}) — vide=conserver :",
+                validate=lambda t: (t == "" or t.isdigit()) or "Entrez un entier ou laissez vide",
+                default="",
+            ).execute()
+            fk_utilisateur = evt.fk_utilisateur if fk_utilisateur_str == "" else int(fk_utilisateur_str)
+
+            # --- Construction du modèle pour l'update ---
+            evt_out = EvenementModelOut(
+                id_evenement=evt.id_evenement,
+                fk_transport=fk_transport,
+                fk_utilisateur=fk_utilisateur,
+                titre=titre,
+                adresse=adresse,
+                ville=ville,
+                date_evenement=date_evenement,
+                description=description,
+                capacite=capacite,
+                categorie=categorie,
+                statut=statut,
+                date_creation=evt.date_creation,  # non modifié
+            )
+
+        except ValidationError as ve:
+            print("Données invalides :")
+            for err in ve.errors():
+                loc = ".".join(str(x) for x in err.get("loc", []))
+                msg = err.get("msg", "erreur")
+                print(f"   - {loc}: {msg}")
+            logger.info("ValidationError modification événement", exc_info=ve)
+            return AccueilVue("Modification annulée — retour au menu principal")
+        except Exception as e:
+            logger.exception("Erreur de saisie: %s", e)
+            print("Erreur de saisie.")
+            return AccueilVue("Modification annulée — retour au menu principal")
+
+        # --- Appel DAO ---
+        try:
+            updated = self.dao.update(evt_out)
+        except Exception as e:
+            logger.exception("Erreur DB modification événement: %s", e)
+            print("Erreur lors de la mise à jour en base (conflit de contraintes ?).")
+            return AccueilVue("Échec modification — retour au menu principal")
+
+        if updated is None:
+            print("Aucune ligne modifiée (événement introuvable ?).")
+            return AccueilVue("Échec modification — retour au menu principal")
+
+        print(f"Événement mis à jour (id={updated.id_evenement}) : {updated.titre} — date {updated.date_evenement}")
+        return AccueilVue("Événement modifié — retour au menu principal")
+
+
+# ---------- Helpers ----------
+
+def _valid_date(s: str) -> bool:
+    try:
+        date.fromisoformat(s)
+        return True
+    except Exception:
+        return False
+
+
+def _clean_optional_text(user_input: str, current_value: Optional[str]) -> Optional[str]:
+    """
+    Interprétation pour champs optionnels :
+      - ''     -> conserver la valeur actuelle
+      - '-'    -> None (effacer)
+      - autre  -> nouvelle valeur strip()
+    """
+    if user_input == "":
+        return current_value
+    if user_input == "-":
+        return None
+    return user_input.strip()

@@ -90,4 +90,5 @@ if __name__ == "__main__":
         parser.print_help()
 
 # Exemple :
-# PYTHONPATH="src"; python src/utils/securite.py -p mdpAlice123 -p mdpBob123 -p mdpMarieMart1
+# PYTHONPATH="src"; python src/utils/securite.py -p mdpAlice123 -p mdpBob123 -p mdpMarieMart1, -p mdpJuju123
+# -p mdpPierrot3559

@@ -57,10 +57,10 @@ def test_find_by_email():
     email = "alice.dupont@email.com"
 
     # WHEN
-    utilisateur = UtilisateurDao().find_by_email(email)
+    participant = UtilisateurDao().find_by_email(email)
 
     # THEN
-    assert utilisateur is not None
+    assert participant is not None
 
 
 def test_create():
@@ -92,8 +92,8 @@ def test_update():
 
     # GIVEN
     new_mail = "alice.dupont@gmail.com"
-    utilisateur = UtilisateurModelOut(id_utilisateur=1, email=new_mail, prenom="Alice", nom="Dupont",
-                                      telephone="0612345678",
+    utilisateur = UtilisateurModelOut(id_utilisateur=1, email=new_mail, prenom="Alice",
+                                      nom="Dupont", telephone="0612345678",
                                       mot_de_passe="$2b$12$xagP1GoNLUNNYm8WIAqVRO7Z3HAIrOLFKxwLDAnu5oak/fyWkknDi",
                                       administrateur=True, date_creation=datetime.now())
 

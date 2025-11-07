@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 from getpass import getpass
 import logging
+import pwinput
 
 from view.session import Session
 from dao.UtilisateurDAO import UtilisateurDao
@@ -30,7 +31,7 @@ class ConnexionVue:
 
         # --- Saisie ---
         email = input("Email : ").strip()
-        mot_de_passe = input("Mot de passe : ")
+        mot_de_passe = pwinput.pwinput(prompt="Mot de passe : ", mask="*")
 
         if not email or not mot_de_passe:
             print("Email et mot de passe sont obligatoires.")

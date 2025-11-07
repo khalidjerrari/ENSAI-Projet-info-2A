@@ -9,6 +9,7 @@ from model.utilisateur_models import UtilisateurModelOut
 
 from dotenv import load_dotenv
 from utils.api_brevo import send_email_brevo
+import pwinput
 
 load_dotenv()
 
@@ -49,7 +50,7 @@ class SuppressionCompteVue:
             return AccueilVue("Suppression annulée — retour au menu principal")
 
         # --- Re-authentification via mot de passe ---
-        mot_de_passe = input("Veuillez saisir votre mot de passe : ").strip()
+        mot_de_passe = pwinput.pwinput(prompt="Veuillez saisir votre mot de passe : ", mask="*").strip()
         if not mot_de_passe:
             print("Mot de passe requis.")
             return AccueilVue("Suppression annulée — retour au menu principal")

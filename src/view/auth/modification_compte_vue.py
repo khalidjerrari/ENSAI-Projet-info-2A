@@ -10,6 +10,7 @@ from model.utilisateur_models import UtilisateurModelOut
 
 from dotenv import load_dotenv
 from utils.api_brevo import send_email_brevo
+import pwinput
 
 load_dotenv()
 
@@ -117,7 +118,7 @@ class ModificationCompteVue:
 
         if changer_mdp == "o":
             # Re-authentification
-            mot_de_passe_actuel = input("Mot de passe actuel : ").strip()
+            mot_de_passe_actuel = pwinput.pwinput(prompt="Mot de passe actuel: ", mask="*").strip()
             try:
                 reauth = self.dao.authenticate(user_out.email, mot_de_passe_actuel)
                 if reauth is None or reauth.id_utilisateur != user_out.id_utilisateur:
@@ -128,8 +129,8 @@ class ModificationCompteVue:
                 return AccueilVue("Erreur technique — retour au menu principal")
 
             # Saisie nouveau mot de passe
-            new_pwd = input("Nouveau mot de passe : ")
-            new_pwd2 = input("Confirmez le nouveau mot de passe : ")
+            new_pwd =  pwinput.pwinput(prompt="Nouveau mot de passe : ", mask="*")
+            new_pwd2 = pwinput.pwinput(prompt="Confirmez le nouveau mot de passe : ", mask="*")
 
             pwd_errs = self._verifs_password_change(new_pwd, new_pwd2)
             if pwd_errs:

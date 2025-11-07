@@ -2,6 +2,7 @@
 from typing import Optional, List
 #from getpass import getpass
 import re
+import pwinput
 
 from pydantic import ValidationError
 
@@ -37,7 +38,7 @@ class CreationCompteVue:
         prenom = input("Prénom : ").strip()
         telephone = input("Téléphone (optionnel) : ").strip() or None
         email = input("Email : ").strip()
-        mot_de_passe = input("Mot de passe : ")
+        mot_de_passe = pwinput.pwinput(prompt="Mot de passe : ", mask="*")
         mot_de_passe2 = input("Confirmez le mot de passe : ")
 
         # --- Vérifs simples avant Pydantic ---

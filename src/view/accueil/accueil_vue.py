@@ -51,7 +51,7 @@ class AccueilVue(VueAbstraite):
             "Quitter",
         ]
 
-        print("\n" + "-" * 50 + "\n🚌 Shotgun ENSAI\n" + "-" * 50 + "\n")
+        print("\n" + "-" * 10 + "\n🚌 Shotgun ENSAI\n" + "-" * 10 + "\n")
         choix = inquirer.select(
             message=message,
             choices=choices_list,

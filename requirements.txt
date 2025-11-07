@@ -20,3 +20,4 @@ pydantic
 pydantic[email]
 typing
 datetime
+pwinput

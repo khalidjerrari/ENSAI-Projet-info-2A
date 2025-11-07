@@ -8,6 +8,7 @@ from view.evenement.creer_evenement_vue import CreerEvenementVue
 from view.evenement.modifier_evenement_vue import ModifierEvenementVue
 from view.evenement.supprimer_evenement_vue import SupprimerEvenementVue
 from view.consulter.liste_reservation_vue import ListeInscritsEvenementVue
+from view.consulter.statistiques_vue import StatistiquesInscriptionsVue
 # On importera la vue des réservations plus tard
 # from view.reservations.mes_reservations_vue import MesReservationsVue
 
@@ -38,8 +39,9 @@ class ConnexionAdminVue(VueAbstraite):
             "Consulter mes réservations",
             "Consulter les inscriptions",
             "Créer un événement",
-            "Mofidier un événement",
+            "Modifier un événement",
             "Supprimer un événement",
+            "Statistiques inscription",
             "Retour (Se déconnecter)"
         ]
 
@@ -63,12 +65,15 @@ class ConnexionAdminVue(VueAbstraite):
             case "Créer un événement":
                 return CreerEvenementVue()
             
-            case "Mofidier un événement":
-                return ModifierEvenementVue
+            case "Modifier un événement":
+                return ModifierEvenementVue()
 
             case "Supprimer un événement":
-                return SupprimerEvenementVue
+                return SupprimerEvenementVue()
             
+            case "Statistiques inscription":
+                return StatistiquesInscriptionsVue()
+
             case "Retour (Se déconnecter)":
                 Session().deconnexion()
                 print("Déconnexion réussie.")

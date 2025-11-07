@@ -7,6 +7,7 @@ from view.consulter.consulter_evenement_vue import ConsulterVue
 from view.evenement.creer_evenement_vue import CreerEvenementVue
 from view.evenement.modifier_evenement_vue import ModifierEvenementVue
 from view.evenement.supprimer_evenement_vue import SupprimerEvenementVue
+from view.consulter.liste_reservation_vue import ListeInscritsEvenementVue
 # On importera la vue des réservations plus tard
 # from view.reservations.mes_reservations_vue import MesReservationsVue
 
@@ -35,6 +36,7 @@ class ConnexionAdminVue(VueAbstraite):
         choices = [
             "Consulter les événements",
             "Consulter mes réservations",
+            "Consulter les inscriptions",
             "Créer un événement",
             "Mofidier un événement",
             "Supprimer un événement",
@@ -54,7 +56,10 @@ class ConnexionAdminVue(VueAbstraite):
             
             case "Consulter mes réservations":
                 return MesReservationsVue()
-
+            
+            case "Consulter les inscriptions":
+                return ListeInscritsEvenementVue()
+            
             case "Créer un événement":
                 return CreerEvenementVue()
             

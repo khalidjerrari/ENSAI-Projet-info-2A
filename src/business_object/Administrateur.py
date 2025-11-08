@@ -1,6 +1,6 @@
 from Utilisateur import Utilisateur
 from Evenement import Evenement
-from EvenementDAO import EvenementDao
+from dao.evenement_dao import EvenementDao
 
 
 class Administrateur(Utilisateur):

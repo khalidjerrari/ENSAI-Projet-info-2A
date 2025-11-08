@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from dao.EvenementDAO import EvenementDao
-from dao.ReservationDAO import ReservationDao
+from dao.evenement_dao import EvenementDao
+from dao.reservation_dao import ReservationDao
 from business_object.Evenement import Evenement
 from business_object.CreneauBus import CreneauBus
 from business_object.Reservation import Reservation

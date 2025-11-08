@@ -8,6 +8,7 @@ from unittest.mock import patch
 from utils.reset_database import ResetDatabase
 
 from dao.reservation_dao import ReservationDao
+from dao.evenement_dao import EvenementDao
 from model.reservation_models import ReservationModelIn, ReservationModelOut
 
 
@@ -57,7 +58,7 @@ def test_create(): # Il y a un souci avec la fonction create je pense
     """ Création d'une réservation """
 
     # GIVEN
-    reservation = ReservationModelIn(fk_utilisateur=8, fk_evenement=4, bus_aller=True,
+    reservation = ReservationModelIn(fk_utilisateur=1, fk_evenement=4, bus_aller=True,
                                      bus_retour=True, adherent=False, sam=False, boisson=True)
 
     # WHEN
@@ -65,7 +66,7 @@ def test_create(): # Il y a un souci avec la fonction create je pense
 
     # THEN
     assert creation_ok is not None, "La création de la réservation a échoué"
-    assert creation_ok.fk_utilisateur == 8
+    assert creation_ok.fk_utilisateur == 1
     assert creation_ok.fk_evenement == 4
 
 

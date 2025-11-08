@@ -6,10 +6,10 @@ import pytest
 
 from unittest.mock import patch
 
-from utils.reset_database2 import ResetDatabase
+from utils.reset_database import ResetDatabase
 from utils.securite import hash_password
 
-from dao.AdministrateurDAO import AdministrateurDao
+from dao.administrateur_dao import AdministrateurDao
 from model.utilisateur_models import AdministrateurModelIn, AdministrateurModelOut
 
 

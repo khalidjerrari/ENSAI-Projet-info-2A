@@ -6,10 +6,10 @@ import pytest
 
 from unittest.mock import patch
 
-from utils.reset_database2 import ResetDatabase
+from utils.reset_database import ResetDatabase
 from utils.securite import hash_password
 
-from dao.ParticipantDAO import ParticipantDao
+from dao.participant_dao import ParticipantDao
 from model.participant_models import ParticipantModelOut, ParticipantModelIn
 
 

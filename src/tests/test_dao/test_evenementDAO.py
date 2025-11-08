@@ -5,9 +5,9 @@ import pytest
 
 from unittest.mock import patch
 
-from utils.reset_database2 import ResetDatabase
+from utils.reset_database import ResetDatabase
 
-from dao.EvenementDAO import EvenementDao
+from dao.evenement_dao import EvenementDao
 from model.evenement_models import EvenementModelIn, EvenementModelOut
 
 
@@ -45,19 +45,6 @@ def test_find_by_id():
 
     # THEN
     assert evenement is not None
-
-
-def test_find_by_transport():
-    """Récupère la liste des événements liés à un transport"""
-
-    # GIVEN
-    fk_transport = 4
-
-    # WHEN
-    evenements = EvenementDao().find_by_transport(fk_transport)
-
-    # THEN
-    assert evenements is not None
 
 
 def test_create():

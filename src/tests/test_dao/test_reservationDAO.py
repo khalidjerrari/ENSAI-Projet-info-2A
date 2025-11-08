@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from utils.reset_database import ResetDatabase
 
-from dao.ReservationDAO import ReservationDao
+from dao.reservation_dao import ReservationDao
 from model.reservation_models import ReservationModelIn, ReservationModelOut
 
 

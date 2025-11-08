@@ -5,7 +5,7 @@ import pytest
 
 from unittest.mock import patch
 
-from utils.reset_database import ResetDatabase
+from utils.reset_database2 import ResetDatabase
 
 from dao.EvenementDAO import EvenementDao
 from model.evenement_models import EvenementModelIn, EvenementModelOut

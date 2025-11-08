@@ -11,8 +11,8 @@ from view.vue_abstraite import VueAbstraite
 from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
-# NOTE: garde le même import que dans ta vue de création pour rester cohérent
-from dao.EvenementDAO import EvenementDao
+# ✅ Nouveau : import du service
+from service.evenement_service import EvenementService
 from model.evenement_models import EvenementModelOut
 
 logger = logging.getLogger(__name__)
@@ -28,14 +28,12 @@ STATUTS = [
 class ModifierEvenementVue(VueAbstraite):
     """
     Vue de modification d'un événement (réservée aux administrateurs).
-
-    Compatibilité :
-    - Appel en mode "classe" (ex: ModifierEvenementVue.afficher()) via @classmethod
-    - Appel en mode "instance" via _afficher_impl() / _choisir_menu_impl()
+    Utilise EvenementService au lieu de EvenementDao.
     """
 
     def __init__(self) -> None:
-        self.dao = EvenementDao()
+        super().__init__("Modification d’un événement")
+        self.service = EvenementService()  # ✅ Remplace le DAO
 
     # ---------- WRAPPERS : autorisent l'appel sur la classe ----------
 
@@ -60,7 +58,7 @@ class ModifierEvenementVue(VueAbstraite):
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):
-            print("Accès refusé : vous devez être administrateur.")
+            print("⛔ Accès refusé : vous devez être administrateur.")
             return AccueilVue("Accès refusé")
 
         # --- Sélection de l'événement à modifier ---
@@ -72,15 +70,21 @@ class ModifierEvenementVue(VueAbstraite):
             id_evenement = int(id_str)
         except Exception as e:
             logger.exception("Erreur saisie ID: %s", e)
-            print("ID invalide.")
+            print("⚠️ ID invalide.")
             return AccueilVue("Modification annulée — retour au menu principal")
 
-        evt = self.dao.find_by_id(id_evenement)
+        try:
+            evt = self.service.get_event_by_id(id_evenement)
+        except Exception as e:
+            logger.exception("Erreur récupération événement: %s", e)
+            print("❌ Erreur technique lors de la recherche.")
+            return AccueilVue("Erreur technique — retour au menu principal")
+
         if evt is None:
             print(f"Aucun événement trouvé pour id={id_evenement}.")
             return AccueilVue("Introuvable — retour au menu principal")
 
-        # Récapitulatif avant modification
+        # --- Récapitulatif avant modification ---
         print("\nÉvénement courant :")
         print(f"  - Titre        : {evt.titre}")
         print(f"  - Date         : {evt.date_evenement}")
@@ -94,9 +98,7 @@ class ModifierEvenementVue(VueAbstraite):
         print(f"  - Créé le      : {evt.date_creation}")
 
         # --- Saisie des nouvelles valeurs ---
-        # Convention : laisser vide => conserver / entrer '-' => effacer (NULL) pour champs optionnels
         try:
-            # Titre (obligatoire)
             titre = inquirer.text(
                 message=f"Titre (actuel: {evt.titre}) — vide=conserver :",
                 default="",
@@ -104,21 +106,18 @@ class ModifierEvenementVue(VueAbstraite):
             if titre == "":
                 titre = evt.titre
 
-            # Adresse (optionnel)
             adresse_in = inquirer.text(
                 message=f"Adresse (actuelle: {evt.adresse or '—'}) — vide=conserver, '-'=effacer :",
                 default="",
             ).execute().strip()
             adresse = _clean_optional_text(adresse_in, evt.adresse)
 
-            # Ville (optionnel)
             ville_in = inquirer.text(
                 message=f"Ville (actuelle: {evt.ville or '—'}) — vide=conserver, '-'=effacer :",
                 default="",
             ).execute().strip()
             ville = _clean_optional_text(ville_in, evt.ville)
 
-            # Date (obligatoire)
             date_prompt = f"Date (YYYY-MM-DD) (actuelle: {evt.date_evenement}) — vide=conserver :"
             date_str = inquirer.text(
                 message=date_prompt,
@@ -127,14 +126,12 @@ class ModifierEvenementVue(VueAbstraite):
             ).execute()
             date_evenement = evt.date_evenement if date_str == "" else date.fromisoformat(date_str)
 
-            # Description (optionnel)
             description_in = inquirer.text(
                 message=f"Description (actuelle: {'—' if not evt.description else '(existe)'}) — vide=conserver, '-'=effacer :",
                 default="",
             ).execute().strip()
             description = _clean_optional_text(description_in, evt.description)
 
-            # Capacité (obligatoire > 0)
             capacite_str = inquirer.text(
                 message=f"Capacité (actuelle: {evt.capacite}) — vide=conserver :",
                 validate=lambda t: (t == "" or (t.isdigit() and int(t) > 0)) or "Entrez un entier > 0",
@@ -142,21 +139,18 @@ class ModifierEvenementVue(VueAbstraite):
             ).execute()
             capacite = evt.capacite if capacite_str == "" else int(capacite_str)
 
-            # Catégorie (optionnel)
             categorie_in = inquirer.text(
                 message=f"Catégorie (actuelle: {evt.categorie or '—'}) — vide=conserver, '-'=effacer :",
                 default="",
             ).execute().strip()
             categorie = _clean_optional_text(categorie_in, evt.categorie)
 
-            # Statut (liste)
             statut = inquirer.select(
                 message="Statut :",
                 choices=STATUTS,
                 default=evt.statut if evt.statut in STATUTS else "pas encore finalisé",
             ).execute()
 
-            # fk_utilisateur : désormais nullable (ON DELETE SET NULL)
             fk_utilisateur_str = inquirer.text(
                 message=f"ID utilisateur (actuel: {evt.fk_utilisateur or 'NULL'}) — vide=conserver, '-'=NULL :",
                 validate=lambda t: (t in ('', '-') or t.isdigit()) or "Entrez un entier, vide, ou '-'",
@@ -169,7 +163,7 @@ class ModifierEvenementVue(VueAbstraite):
             else:
                 fk_utilisateur = int(fk_utilisateur_str)
 
-            # --- Construction du modèle pour l'update (sans fk_transport) ---
+            # Construction du modèle mis à jour
             evt_out = EvenementModelOut(
                 id_evenement=evt.id_evenement,
                 fk_utilisateur=fk_utilisateur,
@@ -181,11 +175,11 @@ class ModifierEvenementVue(VueAbstraite):
                 capacite=capacite,
                 categorie=categorie,
                 statut=statut,
-                date_creation=evt.date_creation,  # non modifié
+                date_creation=evt.date_creation,
             )
 
         except ValidationError as ve:
-            print("Données invalides :")
+            print("⚠️ Données invalides :")
             for err in ve.errors():
                 loc = ".".join(str(x) for x in err.get("loc", []))
                 msg = err.get("msg", "erreur")
@@ -194,22 +188,22 @@ class ModifierEvenementVue(VueAbstraite):
             return AccueilVue("Modification annulée — retour au menu principal")
         except Exception as e:
             logger.exception("Erreur de saisie: %s", e)
-            print("Erreur de saisie.")
+            print("⚠️ Erreur de saisie.")
             return AccueilVue("Modification annulée — retour au menu principal")
 
-        # --- Appel DAO ---
+        # --- Appel du service pour mise à jour ---
         try:
-            updated = self.dao.update(evt_out)
+            updated = self.service.update_event(evt_out)
         except Exception as e:
-            logger.exception("Erreur DB modification événement: %s", e)
-            print("Erreur lors de la mise à jour en base (conflit de contraintes ?).")
+            logger.exception("Erreur update événement: %s", e)
+            print("❌ Erreur lors de la mise à jour en base (contrainte ?).")
             return AccueilVue("Échec modification — retour au menu principal")
 
         if updated is None:
             print("Aucune ligne modifiée (événement introuvable ?).")
             return AccueilVue("Échec modification — retour au menu principal")
 
-        print(f"Événement mis à jour (id={updated.id_evenement}) : {updated.titre} — date {updated.date_evenement}")
+        print(f"✅ Événement mis à jour (id={updated.id_evenement}) : {updated.titre} — date {updated.date_evenement}")
         return AccueilVue("Événement modifié — retour au menu principal")
 
 

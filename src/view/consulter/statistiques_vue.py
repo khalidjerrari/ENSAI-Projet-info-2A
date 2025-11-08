@@ -1,47 +1,44 @@
+# view/consulter/statistiques_vue.py
 from typing import Optional, Any, Dict, List
 from InquirerPy import inquirer
 
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 
-from dao.Consultation_evenementDAO import ConsultationEvenementDao
-from dao.ReservationDAO import ReservationDao
+from service.consultation_evenement_service import ConsultationEvenementService
+from service.reservation_service import ReservationService
 
 
 class StatistiquesInscriptionsVue(VueAbstraite):
     """
     Vue admin (F05) : Statistiques globales sur les inscriptions.
-    - Affiche un tableau agrégé par événement :
-      * nombre d’inscrits
-      * capacité totale
-      * places restantes
-      * taux d’occupation
-      * nombre d’adhérents, SAM, payés, etc.
+    Utilise les services pour lister les événements et les réservations.
     """
 
     def __init__(self, message: str = ""):
         super().__init__(message)
-        self.dao_evt = ConsultationEvenementDao()
-        self.dao_resa = ReservationDao()
+        self.service_evt = ConsultationEvenementService()
+        self.service_resa = ReservationService()
 
     # ----------------- Helpers -----------------
     @staticmethod
     def _is_admin() -> bool:
+        """Vérifie si l’utilisateur connecté est administrateur."""
         user = Session().utilisateur
         return bool(user and getattr(user, "administrateur", False))
 
     def _load_all_events(self) -> List[Any]:
-        """Charge tous les événements existants."""
+        """Charge tous les événements existants via le service."""
         try:
-            return self.dao_evt.lister_tous(limit=500)
+            return self.service_evt.lister_tous(limit=500)
         except Exception as exc:
-            print(f"Erreur lors du chargement des événements : {exc}")
+            print(f"⚠️ Erreur lors du chargement des événements : {exc}")
             return []
 
     def _load_reservations(self, id_evenement: int) -> List[Any]:
-        """Récupère les réservations d’un événement donné."""
+        """Récupère les réservations d’un événement via le service."""
         try:
-            return self.dao_resa.find_by_event(id_evenement)
+            return self.service_resa.get_reservations_by_event(id_evenement)
         except Exception:
             return []
 
@@ -62,6 +59,7 @@ class StatistiquesInscriptionsVue(VueAbstraite):
             "adherent": sum(1 for r in reservations if getattr(r, "adherent", False)),
             "sam": sum(1 for r in reservations if getattr(r, "sam", False)),
             "boisson": sum(1 for r in reservations if getattr(r, "boisson", False)),
+            # si ton modèle n'a pas `paye`, ce champ sera simplement ignoré
             "paye": sum(1 for r in reservations if getattr(r, "paye", False)),
         }
 
@@ -114,7 +112,7 @@ class StatistiquesInscriptionsVue(VueAbstraite):
         super().afficher()
 
         if not self._is_admin():
-            print("Accès refusé : réservé aux administrateurs.")
+            print("⛔ Accès refusé : réservé aux administrateurs.")
             return
 
         tableau = self._compute_stats_globale()

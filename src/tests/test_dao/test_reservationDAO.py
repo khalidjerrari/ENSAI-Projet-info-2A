@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+
 import pytest
 
 from unittest.mock import patch
@@ -54,7 +55,7 @@ def test_find_by_id():
     assert reservation is not None
 
 
-def test_create(): # Il y a un souci avec la fonction create je pense
+def test_create():
     """ Création d'une réservation """
 
     # GIVEN
@@ -70,30 +71,38 @@ def test_create(): # Il y a un souci avec la fonction create je pense
     assert creation_ok.fk_evenement == 4
 
 
-def test_update():
-    """Met à jour une réservation"""
+def test_update_flags():
+    """Met à jour les flags d'une réservation"""
 
     # GIVEN
-    new_transport = 2
-    reservation = ReservationModelOut()
+    id_reservation = 5
+    new_bus_retour = False
 
     # WHEN
-    modification_ok = ReservationDao().update(reservation)
+    reservation_updated = ReservationDao().update_flags(
+        id_reservation=id_reservation,
+        bus_retour=new_bus_retour,
+        bus_aller=True,
+        adherent=False,
+        sam=False,
+        boisson=True
+    )
 
     # THEN
-    assert modification_ok
+    assert reservation_updated is not None, "La réservation devrait exister"
+    assert reservation_updated.bus_retour == new_bus_retour
 
 
 def test_delete():
-    """ Supprime un utilisateur """
+    """ Supprime une réservation """
 
     # GIVEN
-    dao = EvenementDao()
-    evenement = dao.find_by_id(3)
-    assert evenement is not None
+    dao = ReservationDao()
+    reservation = dao.find_by_id(3)
+    assert reservation is not None
 
     # WHEN
-    suppression_ok = EvenementDao().delete(evenement.id_evenement)
+    suppression_ok = EvenementDao().delete(reservation.id_reservation)
 
     # THEN
     assert suppression_ok

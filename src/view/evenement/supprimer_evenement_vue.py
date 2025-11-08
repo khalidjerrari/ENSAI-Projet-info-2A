@@ -1,3 +1,4 @@
+# view/evenement/supprimer_evenement_vue.py
 from __future__ import annotations
 from typing import Optional
 import logging
@@ -8,7 +9,8 @@ from view.vue_abstraite import VueAbstraite
 from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
-from dao.EvenementDAO import EvenementDao
+# ✅ On passe par le service
+from service.evenement_service import EvenementService
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +20,13 @@ class SupprimerEvenementVue(VueAbstraite):
     Vue de suppression d'un événement (réservée aux administrateurs).
 
     ✅ Adaptée au nouveau schéma :
-      - Suppression de toute référence à `fk_transport` (champ supprimé de `evenement`).
-      - Rappel (informel) : `reservation` est ON DELETE CASCADE et `bus` est ON DELETE SET NULL.
+      - Suppression de toute référence à `fk_transport`
+      - Utilise EvenementService au lieu du DAO direct
     """
 
     def __init__(self) -> None:
-        self.dao = EvenementDao()
+        super().__init__("Suppression d’un événement")
+        self.service = EvenementService()
 
     # ---------- WRAPPERS : autorisent l'appel sur la classe ----------
 
@@ -48,7 +51,7 @@ class SupprimerEvenementVue(VueAbstraite):
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):
-            print("Accès refusé : vous devez être administrateur.")
+            print("⛔ Accès refusé : vous devez être administrateur.")
             return AccueilVue("Accès refusé")
 
         # --- Saisie de l'ID ---
@@ -60,22 +63,22 @@ class SupprimerEvenementVue(VueAbstraite):
             id_evenement = int(id_str)
         except Exception as e:
             logger.exception("Erreur saisie ID: %s", e)
-            print("ID invalide.")
+            print("⚠️ ID invalide.")
             return AccueilVue("Suppression annulée — retour au menu principal")
 
         # --- Récupération de l'événement (pour affichage/confirmation) ---
         try:
-            evt = self.dao.find_by_id(id_evenement)
+            evt = self.service.get_evenement_by_id(id_evenement)
         except Exception as e:
-            logger.exception("Erreur DB lecture événement: %s", e)
-            print("Erreur lors de la récupération de l'événement.")
+            logger.exception("Erreur lecture événement: %s", e)
+            print("❌ Erreur lors de la récupération de l'événement.")
             return AccueilVue("Échec suppression — retour au menu principal")
 
         if evt is None:
             print(f"Aucun événement trouvé pour id={id_evenement}.")
             return AccueilVue("Introuvable — retour au menu principal")
 
-        # Récapitulatif
+        # --- Récapitulatif ---
         print("\nÉvénement ciblé :")
         print(f"  - ID           : {evt.id_evenement}")
         print(f"  - Titre        : {evt.titre}")
@@ -83,10 +86,9 @@ class SupprimerEvenementVue(VueAbstraite):
         print(f"  - Ville        : {evt.ville or '—'}")
         print(f"  - Statut       : {evt.statut}")
 
-        # --- Confirmation ---
         print("\n⚠️  Attention :")
-        print("   - Toutes les réservations liées à cet événement seront supprimées (ON DELETE CASCADE).")
-        print("   - Les bus liés verront leur événement remis à NULL (ON DELETE SET NULL).")
+        print("   - Toutes les réservations liées seront supprimées (ON DELETE CASCADE).")
+        print("   - Les bus liés verront leur fk_evenement remis à NULL (ON DELETE SET NULL).")
 
         confirm = inquirer.confirm(
             message="Confirmez-vous la suppression ?",
@@ -97,17 +99,17 @@ class SupprimerEvenementVue(VueAbstraite):
             print("Suppression annulée par l'utilisateur.")
             return AccueilVue("Suppression annulée — retour au menu principal")
 
-        # --- Suppression ---
+        # --- Suppression via service ---
         try:
-            ok = self.dao.delete(id_evenement)
+            ok = self.service.supprimer_evenement(id_evenement)
         except Exception as e:
-            logger.exception("Erreur DB suppression événement: %s", e)
-            print("Erreur lors de la suppression en base.")
+            logger.exception("Erreur suppression événement: %s", e)
+            print("❌ Erreur lors de la suppression en base.")
             return AccueilVue("Échec suppression — retour au menu principal")
 
         if not ok:
             print("Aucune ligne supprimée (événement introuvable ?).")
             return AccueilVue("Échec suppression — retour au menu principal")
 
-        print(f"Événement supprimé (id={id_evenement}).")
+        print(f"✅ Événement supprimé (id={id_evenement}).")
         return AccueilVue("Événement supprimé — retour au menu principal")

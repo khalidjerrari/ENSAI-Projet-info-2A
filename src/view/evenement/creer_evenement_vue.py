@@ -1,4 +1,4 @@
-# view/evenement/creer_evenement_vue.py
+# src/view/evenement/creer_evenement_vue.py
 from __future__ import annotations
 from typing import Optional
 from datetime import date
@@ -11,10 +11,8 @@ from view.vue_abstraite import VueAbstraite
 from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
-# ⚠️ Assure-toi que l'import correspond bien au nom de ton module/classe :
-# si ton fichier est dao/evenement_dao.py et la classe s'appelle EvenementDao,
-# préfère: from dao.evenement_dao import EvenementDao
-from dao.EvenementDAO import EvenementDao
+# ✅ Passage au service (plus de DAO direct)
+from service.evenement_service import EvenementService
 from model.evenement_models import EvenementModelIn
 
 logger = logging.getLogger(__name__)
@@ -30,21 +28,25 @@ STATUTS = [
 class CreerEvenementVue(VueAbstraite):
     """
     Vue de création d'un événement (réservée aux administrateurs).
+    Utilise EvenementService.
     """
 
-    def __init__(self) -> None:
-        self.dao = EvenementDao()
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+        self.service = EvenementService()
 
     def afficher(self) -> None:
         print("\n" + "-" * 50)
         print("Création d’un événement".center(50))
         print("-" * 50)
+        if self.message:
+            print(self.message)
 
     def choisir_menu(self) -> Optional[AccueilVue]:
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):
-            print("Accès refusé : vous devez être administrateur.")
+            print("⛔ Accès refusé : vous devez être administrateur.")
             return AccueilVue("Accès refusé")
 
         # --- Saisie des champs ---
@@ -65,12 +67,22 @@ class CreerEvenementVue(VueAbstraite):
 
             description = inquirer.text(message="Description (optionnel) :").execute().strip() or None
 
-            capacite = int(
-                inquirer.text(
+            # ✅ Correction de la saisie de la capacité (plus de ValueError)
+            while True:
+                capacite_str = inquirer.text(
                     message="Capacité :",
                     validate=lambda t: (t.isdigit() and int(t) > 0) or "Entrez un entier > 0",
-                ).execute()
-            )
+                ).execute().strip()
+
+                if not capacite_str:
+                    print("⚠️  La capacité est obligatoire.")
+                    continue
+
+                try:
+                    capacite = int(capacite_str)
+                    break
+                except ValueError:
+                    print("❌ Veuillez entrer un nombre entier valide.")
 
             categorie = inquirer.text(message="Catégorie (optionnel) :").execute().strip() or None
 
@@ -80,10 +92,9 @@ class CreerEvenementVue(VueAbstraite):
                 default="pas encore finalisé",
             ).execute()
 
-            # fk_utilisateur = admin courant (nullable côté DB, mais on le renseigne ici)
             fk_utilisateur = user.id_utilisateur
 
-            # --- Construction du modèle d'entrée (sans fk_transport) ---
+            # --- Construction du modèle d'entrée ---
             evt_in = EvenementModelIn(
                 fk_utilisateur=fk_utilisateur,
                 titre=titre,
@@ -97,27 +108,28 @@ class CreerEvenementVue(VueAbstraite):
             )
 
         except ValidationError as ve:
-            print("Données invalides :")
+            print("❌ Données invalides :")
             for err in ve.errors():
                 loc = ".".join(str(x) for x in err.get("loc", []))
                 msg = err.get("msg", "erreur")
                 print(f"   - {loc}: {msg}")
             logger.info("ValidationError création événement", exc_info=ve)
             return AccueilVue("Création annulée — retour au menu principal")
+
         except Exception as e:
             logger.exception("Erreur de saisie: %s", e)
-            print("Erreur de saisie.")
+            print("⚠️ Erreur de saisie.")
             return AccueilVue("Création annulée — retour au menu principal")
 
-        # --- Appel DAO ---
+        # --- Appel au service (au lieu du DAO) ---
         try:
-            evt_out = self.dao.create(evt_in)
+            evt_out = self.service.create_event(evt_in)
         except Exception as e:
-            logger.exception("Erreur DB création événement: %s", e)
-            print("Erreur lors de la création en base (contrainte non respectée ?).")
+            logger.exception("Erreur Service création événement: %s", e)
+            print("❌ Erreur lors de la création en base (contrainte non respectée ?).")
             return AccueilVue("Échec création — retour au menu principal")
 
-        print(f"Événement créé (id={evt_out.id_evenement}) : {evt_out.titre} — date {evt_out.date_evenement}")
+        print(f"✅ Événement créé (id={evt_out.id_evenement}) : {evt_out.titre} — le {evt_out.date_evenement}")
         return AccueilVue("Événement créé — retour au menu principal")
 
 

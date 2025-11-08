@@ -1,3 +1,4 @@
+# view/consulter/liste_reservation_vue.py
 from typing import Optional, Any, Dict, List
 from datetime import date
 from InquirerPy import inquirer
@@ -5,9 +6,9 @@ from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 
-from dao.Consultation_evenementDAO import ConsultationEvenementDao
-from dao.ReservationDAO import ReservationDao
-from dao.UtilisateurDAO import UtilisateurDao  # ajuste le chemin si besoin
+from service.consultation_evenement_service import ConsultationEvenementService
+from service.reservation_service import ReservationService
+from service.utilisateur_service import UtilisateurService
 
 
 class ListeInscritsEvenementVue(VueAbstraite):
@@ -16,14 +17,14 @@ class ListeInscritsEvenementVue(VueAbstraite):
     - Sélection de l'événement
     - Affichage des inscrits (Nom, Prénom, Email, options)
     - Totaux (participants, bus aller/retour, adhérents)
-    - Bouton 'Actualiser' pour recharger instantanément depuis la BDD
+    - Rafraîchissement manuel
     """
 
     def __init__(self, message: str = "", id_evenement: Optional[int] = None):
         super().__init__(message)
-        self.dao_evt = ConsultationEvenementDao()
-        self.dao_resa = ReservationDao()
-        self.dao_user = UtilisateurDao()
+        self.service_evt = ConsultationEvenementService()
+        self.service_resa = ReservationService()
+        self.service_user = UtilisateurService()
         self.id_evenement = id_evenement
         self._evenement_cache: Any = None  # dict ou modèle EvenementModelOut
 
@@ -43,13 +44,14 @@ class ListeInscritsEvenementVue(VueAbstraite):
 
     def _select_evenement(self) -> Optional[int]:
         """
-        Laisse l'admin choisir un événement (liste des 'disponibles' à partir d'aujourd'hui,
-        avec fallback sur 'tous' si vide).
+        Laisse l'admin choisir un événement (liste des disponibles à partir d'aujourd'hui,
+        avec fallback sur tous si vide).
         """
-        # 1) Tenter via lister_avec_places_restantes (affichage des places)
         choices: List[Dict[str, Any]] = []
+
+        # Essai via liste avec places restantes
         try:
-            dispo = self.dao_evt.lister_avec_places_restantes(limit=200, a_partir_du=date.today())
+            dispo = self.service_evt.lister_avec_places_restantes(limit=200, a_partir_du=date.today())
             for e in dispo:
                 date_evt = e.get("date_evenement", "")
                 titre = e.get("titre", "—")
@@ -59,10 +61,10 @@ class ListeInscritsEvenementVue(VueAbstraite):
         except Exception:
             pass
 
-        # 2) Fallback : tous les événements
+        # Fallback : tous les événements
         if not choices:
             try:
-                tous = self.dao_evt.lister_tous(limit=200)
+                tous = self.service_evt.lister_tous(limit=200)
                 for e in tous:
                     date_evt = getattr(e, "date_evenement", "")
                     titre = getattr(e, "titre", "—")
@@ -71,7 +73,7 @@ class ListeInscritsEvenementVue(VueAbstraite):
                 pass
 
         if not choices:
-            print("Aucun événement disponible.")
+            print("⚠️ Aucun événement disponible.")
             return None
 
         choices.append({"name": "--- Retour ---", "value": None})
@@ -82,19 +84,9 @@ class ListeInscritsEvenementVue(VueAbstraite):
         ).execute()
 
     def _fetch_evenement(self, id_evenement: int):
-        """
-        Recharge la fiche événement (pour titre/date/ville/places restantes si dispo).
-        """
-        # Essayer d’abord la liste avec places restantes
+        """Recharge les détails de l’événement (titre/date/ville/places restantes)."""
         try:
-            rows = self.dao_evt.lister_avec_places_restantes(limit=1, a_partir_du=None)
-            # pas filtré => on fait un autre call ciblé pour éviter le coût
-        except Exception:
-            pass
-
-        # On tente plutôt un scan minimal (2 appels peu coûteux) :
-        try:
-            dispo = self.dao_evt.lister_avec_places_restantes(limit=300, a_partir_du=None)
+            dispo = self.service_evt.lister_avec_places_restantes(limit=300)
             for r in dispo:
                 if r.get("id_evenement") == id_evenement:
                     return r  # dict
@@ -102,30 +94,23 @@ class ListeInscritsEvenementVue(VueAbstraite):
             pass
 
         try:
-            tous = self.dao_evt.lister_tous(limit=500)
-            for e in tous:
-                if getattr(e, "id_evenement", None) == id_evenement:
-                    return e  # modèle EvenementModelOut
+            e = self.service_evt.get_evenement_by_id(id_evenement)
+            return e
         except Exception:
-            pass
-
-        return None
+            return None
 
     def _load_inscrits(self, id_evenement: int) -> List[Dict[str, Any]]:
-        """
-        Retourne la liste des inscrits enrichie avec les infos utilisateur.
-        """
+        """Retourne la liste des inscrits enrichie avec les infos utilisateur."""
         inscrits: List[Dict[str, Any]] = []
         try:
-            reservations = self.dao_resa.find_by_event(id_evenement)
+            reservations = self.service_resa.get_reservations_by_event(id_evenement)
         except Exception as exc:
-            print(f"Erreur lors de la récupération des réservations : {exc}")
+            print(f"⚠️ Erreur lors de la récupération des réservations : {exc}")
             return []
 
         for r in reservations:
-            # r : ReservationModelOut
             try:
-                user = self.dao_user.find_by_id(getattr(r, "fk_utilisateur"))
+                user = self.service_user.get_user_by_id(r.fk_utilisateur)
             except Exception:
                 user = None
 
@@ -187,7 +172,6 @@ class ListeInscritsEvenementVue(VueAbstraite):
 
             print(f"  {i:02d}. {s['prenom']} {s['nom']} <{s['email']}>{opt_str}{dr_str}")
 
-        # Totaux
         total = len(inscrits)
         t_aller = sum(1 for s in inscrits if s["bus_aller"])
         t_retour = sum(1 for s in inscrits if s["bus_retour"])
@@ -203,12 +187,10 @@ class ListeInscritsEvenementVue(VueAbstraite):
     def afficher(self) -> None:
         super().afficher()
 
-        # Contrôle d'accès
         if not self._is_admin():
-            print("Accès refusé : réservé aux administrateurs.")
+            print("⛔ Accès refusé : réservé aux administrateurs.")
             return
 
-        # Sélection de l'événement si non fourni
         if not self.id_evenement:
             self.id_evenement = self._select_evenement()
 
@@ -216,16 +198,12 @@ class ListeInscritsEvenementVue(VueAbstraite):
             print("Aucun événement sélectionné.")
             return
 
-        # Mise en cache des métadonnées de l'événement
         self._evenement_cache = self._fetch_evenement(self.id_evenement)
-
-        # Premier affichage
         inscrits = self._load_inscrits(self.id_evenement)
         self._print_header()
         self._print_inscrits(inscrits)
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
-        # Import local pour éviter les boucles
         from view.administrateur.connexion_admin_vue import ConnexionAdminVue
 
         if not self._is_admin():
@@ -234,7 +212,6 @@ class ListeInscritsEvenementVue(VueAbstraite):
         if not self.id_evenement:
             return ConnexionAdminVue("Aucun événement sélectionné.")
 
-        # Boucle d'actions façon "temps réel" (rafraîchissement à la demande)
         while True:
             action = inquirer.select(
                 message="Actions :",
@@ -246,7 +223,6 @@ class ListeInscritsEvenementVue(VueAbstraite):
             ).execute()
 
             if action == "Actualiser la liste":
-                # Recharger uniquement les inscrits
                 inscrits = self._load_inscrits(self.id_evenement)
                 self._print_header()
                 self._print_inscrits(inscrits)
@@ -261,5 +237,5 @@ class ListeInscritsEvenementVue(VueAbstraite):
                 self._print_header()
                 self._print_inscrits(inscrits)
 
-            else:  # Retour
+            else:
                 return ConnexionAdminVue("Retour au menu admin")

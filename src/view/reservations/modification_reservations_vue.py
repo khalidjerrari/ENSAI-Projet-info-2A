@@ -1,12 +1,15 @@
+# src/view/reservations/modification_reservations_vue.py
 from typing import Optional, Dict, Any, List
 from InquirerPy import inquirer
 
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
-from dao.ReservationDAO import ReservationDao
-from dao.Consultation_evenementDAO import ConsultationEvenementDao
 
-# Email (Brevo) best-effort
+# ✅ On utilise maintenant la couche service
+from service.reservation_service import ReservationService
+from service.evenement_service import EvenementService
+
+# Email (Brevo)
 from dotenv import load_dotenv
 from utils.api_brevo import send_email_brevo
 load_dotenv()
@@ -17,17 +20,17 @@ class ModificationReservationVue(VueAbstraite):
     Vue console pour modifier une réservation existante de l'utilisateur connecté.
     - Liste les réservations de l'utilisateur
     - Affiche le titre de l'événement associé
-    - Permet de modifier : bus_aller, bus_retour, adherent, sam, boisson
-    - Met à jour via ReservationDao.update_flags(...)
+    - Permet de modifier les options (bus, adhérent, etc.)
+    - Met à jour via ReservationService
     - Envoie un e-mail de confirmation (best-effort)
     """
 
     def __init__(self, message: str = ""):
         super().__init__(message)
-        self.dao_resa = ReservationDao()
-        self.dao_ev = ConsultationEvenementDao()
+        self.reservation_service = ReservationService()
+        self.evenement_service = EvenementService()
 
-    # ------------- Helpers -------------
+    # ---------- Helpers ----------
     @staticmethod
     def _flags_to_str(resa_like: Any) -> str:
         """Résumé lisible des options d'une réservation (dict ou objet)."""
@@ -44,9 +47,8 @@ class ModificationReservationVue(VueAbstraite):
         """Construit un mapping id_evenement -> titre (et ville/date si besoin)."""
         mapping: Dict[int, str] = {}
         try:
-            evts = self.dao_ev.lister_tous(limit=1000)
+            evts = self.evenement_service.lister_evenements()
             for e in evts:
-                # e est un EvenementModelOut
                 titre = getattr(e, "titre", "Événement")
                 date_evt = getattr(e, "date_evenement", "")
                 ville = getattr(e, "ville", None)
@@ -56,22 +58,21 @@ class ModificationReservationVue(VueAbstraite):
             pass
         return mapping
 
-    # ------------- Cycle Vue -------------
+    # ---------- Cycle Vue ----------
     def afficher(self) -> None:
         super().afficher()
         print("\n--- Modifier une réservation ---")
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
-        # Import local pour éviter les boucles
         from view.client.connexion_client_vue import ConnexionClientVue
 
         user = Session().utilisateur
         if not user:
             return ConnexionClientVue("Erreur : Vous n'êtes plus connecté.")
 
-        # 1) Charger les réservations de l'utilisateur
+        # 1️⃣ Charger les réservations
         try:
-            reservations = self.dao_resa.find_by_user(user.id_utilisateur)
+            reservations = self.reservation_service.get_reservations_by_user(user.id_utilisateur)
         except Exception as exc:
             print(f"Erreur lors du chargement des réservations : {exc}")
             return ConnexionClientVue("Impossible de récupérer vos réservations.")
@@ -79,7 +80,7 @@ class ModificationReservationVue(VueAbstraite):
         if not reservations:
             return ConnexionClientVue("Vous n'avez aucune réservation à modifier.")
 
-        # 2) Construire la liste affichable avec titres événements
+        # 2️⃣ Préparer les choix à afficher
         ev_map = self._events_title_map()
         choices: List[Dict[str, Any]] = []
         for r in reservations:
@@ -90,7 +91,7 @@ class ModificationReservationVue(VueAbstraite):
 
         choices.append({"name": "--- Retour ---", "value": None})
 
-        # 3) Sélection de la réservation
+        # 3️⃣ Sélection d’une réservation
         selection = inquirer.select(
             message="Choisissez la réservation à modifier :",
             choices=choices,
@@ -99,45 +100,39 @@ class ModificationReservationVue(VueAbstraite):
         if selection is None:
             return ConnexionClientVue("Retour au menu.")
 
-        resa = selection  # ReservationModelOut
-        # Valeurs actuelles
-        curr_bus_aller = bool(getattr(resa, "bus_aller", False))
-        curr_bus_retour = bool(getattr(resa, "bus_retour", False))
-        curr_adherent = bool(getattr(resa, "adherent", False))
-        curr_sam = bool(getattr(resa, "sam", False))
-        curr_boisson = bool(getattr(resa, "boisson", False))
+        resa = selection
 
-        # 4) Demander les nouvelles valeurs (defaults = actuelles)
-        new_bus_aller = inquirer.confirm(message="Bus ALLER ?", default=curr_bus_aller, amark="✓").execute()
-        new_bus_retour = inquirer.confirm(message="Bus RETOUR ?", default=curr_bus_retour, amark="✓").execute()
-        new_adherent = inquirer.confirm(message="Êtes-vous adhérent ?", default=curr_adherent, amark="✓").execute()
-        new_sam = inquirer.confirm(message="Êtes-vous SAM ce soir ?", default=curr_sam, amark="✓").execute()
-        new_boisson = inquirer.confirm(message="Prenez-vous une boisson ?", default=curr_boisson, amark="✓").execute()
+        # 4️⃣ Valeurs actuelles
+        curr = {
+            "bus_aller": bool(getattr(resa, "bus_aller", False)),
+            "bus_retour": bool(getattr(resa, "bus_retour", False)),
+            "adherent": bool(getattr(resa, "adherent", False)),
+            "sam": bool(getattr(resa, "sam", False)),
+            "boisson": bool(getattr(resa, "boisson", False)),
+        }
 
-        # 5) Si rien n'a changé -> message et retour
-        if (
-            new_bus_aller == curr_bus_aller and
-            new_bus_retour == curr_bus_retour and
-            new_adherent == curr_adherent and
-            new_sam == curr_sam and
-            new_boisson == curr_boisson
-        ):
+        # 5️⃣ Nouvelle saisie
+        new = {
+            "bus_aller": inquirer.confirm(message="Bus ALLER ?", default=curr["bus_aller"], amark="✓").execute(),
+            "bus_retour": inquirer.confirm(message="Bus RETOUR ?", default=curr["bus_retour"], amark="✓").execute(),
+            "adherent": inquirer.confirm(message="Êtes-vous adhérent ?", default=curr["adherent"], amark="✓").execute(),
+            "sam": inquirer.confirm(message="Êtes-vous SAM ce soir ?", default=curr["sam"], amark="✓").execute(),
+            "boisson": inquirer.confirm(message="Prenez-vous une boisson ?", default=curr["boisson"], amark="✓").execute(),
+        }
+
+        if new == curr:
             return ConnexionClientVue("Aucun changement détecté.")
 
-        # 6) Confirmation
+        # 6️⃣ Confirmation
         confirme = inquirer.confirm(message="Appliquer les modifications ?", default=True, amark="✓").execute()
         if not confirme:
             return ConnexionClientVue("Modification annulée.")
 
-        # 7) Mise à jour via DAO
+        # 7️⃣ Mise à jour via le service
         try:
-            updated = self.dao_resa.update_flags(
+            updated = self.reservation_service.update_reservation_flags(
                 resa.id_reservation,
-                bus_aller=new_bus_aller,
-                bus_retour=new_bus_retour,
-                adherent=new_adherent,
-                sam=new_sam,
-                boisson=new_boisson,
+                **new
             )
             if not updated:
                 return ConnexionClientVue("Échec de la modification de la réservation.")
@@ -145,15 +140,10 @@ class ModificationReservationVue(VueAbstraite):
             print(f"Erreur lors de la mise à jour : {exc}")
             return ConnexionClientVue("Échec de la modification de la réservation.")
 
-        # 8) E-mail de confirmation (best-effort)
+        # 8️⃣ E-mail de confirmation (best-effort)
         try:
             ev_label = self._events_title_map().get(getattr(resa, "fk_evenement", None), f"Événement #{getattr(resa, 'fk_evenement', '?')}")
-            options = []
-            if new_bus_aller:  options.append("Bus aller")
-            if new_bus_retour: options.append("Bus retour")
-            if new_adherent:   options.append("Adhérent")
-            if new_sam:        options.append("SAM")
-            if new_boisson:    options.append("Boisson")
+            options = [k.replace("_", " ").capitalize() for k, v in new.items() if v]
             options_str = ", ".join(options) if options else "Aucune option"
 
             subject = "Modification de votre réservation — BDE Ensai"

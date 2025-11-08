@@ -3,38 +3,41 @@ from InquirerPy import inquirer
 
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
-from dao.ReservationDAO import ReservationDao
-from dao.EvenementDAO import EvenementDao
+
+# ✅ On passe par les services
+from service.reservation_service import ReservationService
+from service.evenement_service import EvenementService
 
 
 class MesReservationsVue(VueAbstraite):
     """
     Vue pour afficher les réservations d'un utilisateur.
 
-    ✅ Adaptée au nouveau schéma SQL :
-       - Suppression de l'affichage `fk_transport` (n'existe plus).
-       - Affichage des informations d'événement via `fk_evenement`.
-       - Affichage des choix bus (aller/retour) et options (adhérent, sam, boisson).
+    ✅ Adaptée au nouveau schéma + couche service :
+       - Plus d'accès direct aux DAO.
+       - Passe par ReservationService et EvenementService.
+       - Supprime toute référence à fk_transport.
     """
 
     def __init__(self, message: str = ""):
         super().__init__(message)
         self.session = Session()
         self.user = self.session.utilisateur
-        self.reservation_dao = ReservationDao()
-        self.evenement_dao = EvenementDao()
+        self.reservation_service = ReservationService()
+        self.evenement_service = EvenementService()
 
     def afficher(self):
         super().afficher()
 
         if not self.session.est_connecte() or not self.user:
-            print("Erreur : Vous n'êtes pas connecté.")
+            print("⛔ Vous n'êtes pas connecté.")
             return
 
-        print(f"--- 🗓️ Vos Réservations ({self.user.prenom}) ---")
+        print(f"--- 🗓️  Vos Réservations ({self.user.prenom}) ---")
 
         try:
-            reservations = self.reservation_dao.find_by_user(self.user.id_utilisateur)
+            # ✅ On passe par le service
+            reservations = self.reservation_service.get_reservations_by_user(self.user.id_utilisateur)
 
             if not reservations:
                 print("\nVous n'avez aucune réservation pour le moment.")
@@ -42,23 +45,18 @@ class MesReservationsVue(VueAbstraite):
 
             print("\nVoici la liste de vos réservations :")
             for res in reservations:
-                # res est un objet ReservationModelOut (nouveau schéma)
-                # Champs attendus : id_reservation, fk_evenement, date_reservation,
-                # bus_aller, bus_retour, adherent, sam, boisson
                 evt = None
                 try:
-                    if getattr(res, "fk_evenement", None) is not None:
-                        evt = self.evenement_dao.find_by_id(res.fk_evenement)
+                    if getattr(res, "fk_evenement", None):
+                        evt = self.evenement_service.get_evenement_by_id(res.fk_evenement)
                 except Exception:
-                    # On ne bloque pas l'affichage si l'événement n'est pas récupérable
-                    evt = None
+                    evt = None  # On ne bloque pas l’affichage si l’événement n’est pas accessible
 
                 print(f"\n[Réservation #{res.id_reservation}]")
-                if evt is not None:
-                    # evt est un EvenementModelOut : titre, date_evenement, ville, adresse, etc.
+                if evt:
                     print(f"  Événement : {evt.titre} — le {getattr(evt, 'date_evenement', '')}")
-                    ville = getattr(evt, 'ville', None)
-                    adresse = getattr(evt, 'adresse', None)
+                    ville = getattr(evt, "ville", None)
+                    adresse = getattr(evt, "adresse", None)
                     if ville or adresse:
                         print(f"  Lieu      : {adresse or '—'}{(' | ' + ville) if ville else ''}")
                 else:
@@ -71,7 +69,6 @@ class MesReservationsVue(VueAbstraite):
                     except Exception:
                         print(f"  Réservé le: {dr}")
 
-                # Trajets bus
                 print(
                     "  Trajet    : Aller? {} | Retour? {}".format(
                         "Oui" if getattr(res, "bus_aller", False) else "Non",
@@ -79,7 +76,6 @@ class MesReservationsVue(VueAbstraite):
                     )
                 )
 
-                # Options
                 print(
                     "  Options   : Adhérent? {} | SAM? {} | Boisson? {}".format(
                         "Oui" if getattr(res, "adherent", False) else "Non",
@@ -89,20 +85,17 @@ class MesReservationsVue(VueAbstraite):
                 )
 
         except Exception as e:
-            print(f"\n Erreur lors de la récupération de vos réservations : {e}")
+            print(f"\n❌ Erreur lors de la récupération de vos réservations : {e}")
 
     def choisir_menu(self):
-        # Import local pour éviter la boucle circulaire
         from view.client.connexion_client_vue import ConnexionClientVue
 
         if not self.session.est_connecte() or not self.user:
-            return ConnexionClientVue()  # Retour au menu client (connexion)
+            return ConnexionClientVue()
 
-        # Menu simple pour juste revenir en arrière
         inquirer.select(
             message="Que souhaitez-vous faire ?",
             choices=["Retour au menu client"],
         ).execute()
 
-        # Quoi qu'il arrive, on retourne au menu client
         return ConnexionClientVue()

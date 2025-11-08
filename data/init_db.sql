@@ -63,8 +63,10 @@ CREATE TABLE reservation (
     adherent BOOLEAN DEFAULT FALSE,
     sam BOOLEAN DEFAULT FALSE,
     boisson BOOLEAN DEFAULT FALSE,
-    -- Un utilisateur ne peut réserver qu'une seule fois un même trajet 
-    CONSTRAINT reservation_unique UNIQUE (fk_utilisateur)
+
+    -- ✅ Correction ici :
+    -- Un utilisateur ne peut réserver qu'une seule fois le même événement
+    CONSTRAINT reservation_unique_user_event UNIQUE (fk_utilisateur, fk_evenement)
 );
 
 -----------------------------------------------------

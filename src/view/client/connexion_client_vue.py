@@ -1,4 +1,4 @@
-# src/view/client/connexion_client_vue.py
+# view/client/connexion_client_vue.py
 from InquirerPy import inquirer
 from view.reservations.mes_reservations_vue import MesReservationsVue
 from view.vue_abstraite import VueAbstraite
@@ -13,22 +13,25 @@ from view.reservations.suppression_reservations_vue import SuppressionReservatio
 class ConnexionClientVue(VueAbstraite):
     """
     Vue pour le menu d'un utilisateur non-admin (client).
+    Utilise la session pour déterminer les actions possibles.
     """
+
     def __init__(self, message: str = ""):
         super().__init__(message)
-        # Ne pas stocker l'utilisateur ici (risque d'être obsolète)
-        # self.user = Session().utilisateur
 
     def afficher(self):
         super().afficher()
 
     def choisir_menu(self):
+        """
+        Affiche le menu client principal.
+        """
         from view.accueil.accueil_vue import AccueilVue
 
-        # Relecture live de la session
+        # Vérifie la session
         user = Session().utilisateur
         if not user:
-            print("Erreur : Vous n'êtes plus connecté.")
+            print("⚠️ Vous n'êtes plus connecté.")
             return AccueilVue()
 
         message = f"Connecté en tant que : {user.prenom} {user.nom}"
@@ -37,9 +40,9 @@ class ConnexionClientVue(VueAbstraite):
             "Consulter mes réservations",
             "Modifier mes réservations",
             "Supprimer mes réservations",
-            "Supprimer mon compte",
             "Modifier mon compte",
-            "Retour (Se déconnecter)"
+            "Supprimer mon compte",
+            "Retour (Se déconnecter)",
         ]
 
         choix = inquirer.select(
@@ -53,20 +56,20 @@ class ConnexionClientVue(VueAbstraite):
 
             case "Consulter mes réservations":
                 return MesReservationsVue()
-            
+
             case "Modifier mes réservations":
                 return ModificationReservationVue()
-            
+
             case "Supprimer mes réservations":
                 return SuppressionReservationVue()
-
-            case "Supprimer mon compte":
-                return SuppressionCompteVue()
 
             case "Modifier mon compte":
                 return ModificationCompteVue()
 
+            case "Supprimer mon compte":
+                return SuppressionCompteVue()
+
             case "Retour (Se déconnecter)":
-                Session().deconnexion()   # si tu passes à une Session de classe, remplace par: Session.deconnexion()
-                print("Déconnexion réussie.")
+                Session().deconnexion()
+                print("✅ Déconnexion réussie.")
                 return AccueilVue("Vous avez été déconnecté.")

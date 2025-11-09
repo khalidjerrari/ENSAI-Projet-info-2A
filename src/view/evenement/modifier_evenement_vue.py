@@ -50,11 +50,17 @@ class ModifierEvenementVue(VueAbstraite):
     # ---------- Implémentations réelles (instance) ----------
 
     def _afficher_impl(self) -> None:
+        """
+        Affiche l’en-tête de la vue de modification d’un événement.
+        """
         print("\n" + "-" * 50)
         print("Modification d’un événement".center(50))
         print("-" * 50)
 
     def _choisir_menu_impl(self) -> Optional[AccueilVue]:
+        """
+        Gère la modification d’un événement.
+        """
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):
@@ -210,6 +216,9 @@ class ModifierEvenementVue(VueAbstraite):
 # ---------- Helpers ----------
 
 def _valid_date(s: str) -> bool:
+    """
+    Vérifie si la chaîne donnée correspond à une date ISO valide.
+    """
     try:
         date.fromisoformat(s)
         return True
@@ -219,6 +228,7 @@ def _valid_date(s: str) -> bool:
 
 def _clean_optional_text(user_input: str, current_value: Optional[str]) -> Optional[str]:
     """
+    Nettoie une saisie texte optionnelle en gérant la conservation ou la suppression de valeur
     Interprétation pour champs optionnels :
       - ''     -> conserver la valeur actuelle
       - '-'    -> None (effacer)

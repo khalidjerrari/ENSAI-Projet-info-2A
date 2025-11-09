@@ -55,4 +55,3 @@ class ConnexionVue:
         print(f"✅ Connecté : {user.prenom} {user.nom} — {role}")
 
         return AccueilVue(f"Bienvenue {user.prenom} !")
-

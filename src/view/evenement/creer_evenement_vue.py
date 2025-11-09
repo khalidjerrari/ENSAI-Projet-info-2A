@@ -36,6 +36,9 @@ class CreerEvenementVue(VueAbstraite):
         self.service = EvenementService()
 
     def afficher(self) -> None:
+        """
+        Affiche l’en-tête de la vue de création d’un événement.
+        """
         print("\n" + "-" * 50)
         print("Création d’un événement".center(50))
         print("-" * 50)
@@ -43,6 +46,9 @@ class CreerEvenementVue(VueAbstraite):
             print(self.message)
 
     def choisir_menu(self) -> Optional[AccueilVue]:
+        """
+        Gère la création d'un événement
+        """
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):

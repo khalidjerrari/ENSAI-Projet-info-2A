@@ -35,7 +35,7 @@ class ConnexionAdminVue(VueAbstraite):
     def choisir_menu(self):
         from view.accueil.accueil_vue import AccueilVue
 
-        # 🧩 Vérification de la session
+        # Vérification de la session
         user = self.session.utilisateur
         if not user:
             print("⚠️  Vous n'êtes plus connecté.")
@@ -59,7 +59,7 @@ class ConnexionAdminVue(VueAbstraite):
             choices=choices,
         ).execute()
 
-        # 🧭 Gestion des redirections
+        # Gestion des redirections
         match choix:
             case "Consulter les événements":
                 return ConsulterVue()
@@ -84,9 +84,8 @@ class ConnexionAdminVue(VueAbstraite):
 
             case "Retour (Se déconnecter)":
                 try:
-                    self.utilisateur_service.deconnexion()  # ✅ Passe par le service
-                    print("✅ Déconnexion réussie.")
+                    self.utilisateur_service.deconnexion()  # Passe par le service
+                    print(" Déconnexion réussie.")
                 except Exception as e:
-                    print(f"⚠️ Erreur lors de la déconnexion : {e}")
+                    print(f"Erreur lors de la déconnexion : {e}")
                 return AccueilVue("Vous avez été déconnecté.")
-                

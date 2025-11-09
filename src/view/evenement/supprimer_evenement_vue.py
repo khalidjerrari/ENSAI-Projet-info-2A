@@ -9,7 +9,7 @@ from view.vue_abstraite import VueAbstraite
 from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
-# ✅ On passe par le service
+# On passe par le service
 from service.evenement_service import EvenementService
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class SupprimerEvenementVue(VueAbstraite):
     """
     Vue de suppression d'un événement (réservée aux administrateurs).
 
-    ✅ Adaptée au nouveau schéma :
+    Adaptée au nouveau schéma :
       - Suppression de toute référence à `fk_transport`
       - Utilise EvenementService au lieu du DAO direct
     """
@@ -43,11 +43,17 @@ class SupprimerEvenementVue(VueAbstraite):
     # ---------- Implémentations réelles (instance) ----------
 
     def _afficher_impl(self) -> None:
+        """
+        Affiche l’en-tête de la vue de suppression d’un événement.
+        """
         print("\n" + "-" * 50)
         print("Suppression d’un événement".center(50))
         print("-" * 50)
 
     def _choisir_menu_impl(self) -> Optional[AccueilVue]:
+        """
+        Gère la suppression d’un événement.
+        """
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):

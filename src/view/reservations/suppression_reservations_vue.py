@@ -59,10 +59,16 @@ class SuppressionReservationVue(VueAbstraite):
 
     # ----------------- Cycle Vue -----------------
     def afficher(self) -> None:
+        """
+        Affiche l’en-tête indiquant la suppression d’une réservation.
+        """
         super().afficher()
         print("\n--- 🗑️  Supprimer une réservation ---")
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
+        """
+        Permet à l’utilisateur de sélectionner et confirmer la suppression d’une réservation.
+        """
         # Import local pour éviter les boucles circulaires
         from view.client.connexion_client_vue import ConnexionClientVue
 

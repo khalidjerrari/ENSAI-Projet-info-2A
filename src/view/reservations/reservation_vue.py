@@ -34,10 +34,17 @@ class ReservationVue(VueAbstraite):
 
     # ----------------- Cycle Vue -----------------
     def afficher(self) -> None:
+        """
+        Affiche le titre de la vue pour réserver un événement.
+        """
         super().afficher()
         print("\n--- 🎟️ Réservation d’un événement ---")
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
+        """
+        Permet à l’utilisateur de créer une réservation pour un événement
+        via un formulaire interactif.
+        """
         from view.client.connexion_client_vue import ConnexionClientVue
         from view.consulter.consulter_evenement_vue import ConsulterVue
 

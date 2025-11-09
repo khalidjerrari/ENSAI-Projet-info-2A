@@ -60,10 +60,16 @@ class ModificationReservationVue(VueAbstraite):
 
     # ---------- Cycle Vue ----------
     def afficher(self) -> None:
+        """
+        Affiche le titre de la vue de modification d’une réservation.
+        """
         super().afficher()
         print("\n--- Modifier une réservation ---")
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
+        """
+        Permet à l’utilisateur de modifier une réservation existante via des saisies interactives.
+        """
         from view.client.connexion_client_vue import ConnexionClientVue
 
         user = Session().utilisateur

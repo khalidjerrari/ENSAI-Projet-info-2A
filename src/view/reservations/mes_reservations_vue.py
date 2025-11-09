@@ -13,7 +13,7 @@ class MesReservationsVue(VueAbstraite):
     """
     Vue pour afficher les réservations d'un utilisateur.
 
-    ✅ Adaptée au nouveau schéma + couche service :
+    Adaptée au nouveau schéma + couche service :
        - Plus d'accès direct aux DAO.
        - Passe par ReservationService et EvenementService.
        - Supprime toute référence à fk_transport.
@@ -27,6 +27,9 @@ class MesReservationsVue(VueAbstraite):
         self.evenement_service = EvenementService()
 
     def afficher(self):
+        """
+        Affiche la liste des réservations de l’utilisateur connecté.
+        """
         super().afficher()
 
         if not self.session.est_connecte() or not self.user:
@@ -88,6 +91,9 @@ class MesReservationsVue(VueAbstraite):
             print(f"\n❌ Erreur lors de la récupération de vos réservations : {e}")
 
     def choisir_menu(self):
+        """
+        Gère le retour au menu client après consultation des réservations.
+        """
         from view.client.connexion_client_vue import ConnexionClientVue
 
         if not self.session.est_connecte() or not self.user:

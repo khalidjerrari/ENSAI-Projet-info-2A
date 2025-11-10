@@ -44,9 +44,9 @@ class EvenementService:
             raise ValueError("Le titre de l'événement est obligatoire.")
         if not evenement_in.date_evenement:
             raise ValueError("La date de l'événement est obligatoire.")
-        if evenement_in.capacite is not None and evenement_in.capacite <= 0:
-            raise ValueError("La capacité doit être un entier positif.")
-
+        if evenement_in.capacite is None or evenement_in.capacite <= 0:
+            raise ValueError("La capacité doit être un entier positif obligatoire.")
+            
         return self.dao.create(evenement_in)
 
     # ---------- UPDATE ----------

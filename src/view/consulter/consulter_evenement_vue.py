@@ -2,6 +2,7 @@
 from typing import Optional, Any, List
 from datetime import date
 from InquirerPy import inquirer
+from typing import Optional, Any, List
 
 from view.vue_abstraite import VueAbstraite
 from service.consultation_evenement_service import ConsultationEvenementService  # ✅ nouveau
@@ -21,6 +22,16 @@ class ConsulterVue(VueAbstraite):
 
     def afficher(self) -> None:
         super().afficher()
+
+    # --- AJOUT DE L'HELPER  ---
+    @staticmethod
+    def _get_attr(obj: Any, key: str, default=None):
+        """Accède à un attribut/clé, que ce soit un dict ou un objet."""
+        if obj is None:
+            return default
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
         # Import local pour éviter boucles circulaires
@@ -91,37 +102,95 @@ class ConsulterVue(VueAbstraite):
                 input("\n(Entrée) pour continuer...")
                 return self
 
-            # ---------- 3. Formatage pour affichage ----------
+           # ---------- 3. Formatage (CORRIGÉ) ----------
             choices_events = []
             for ev in events:
-                if isinstance(ev, dict):  # Cas de lister_avec_places_restantes()
-                    places_val = ev.get("places_restantes")
-                    places_str = f"({places_val} places)" if places_val is not None else ""
-                    date_evt = ev.get("date_evenement", "")
-                    titre = ev.get("titre", "N/A")
-                else:  # Cas d’un EvenementModelOut
-                    places_str = ""
-                    date_evt = ev.date_evenement
-                    titre = ev.titre
+                # On utilise notre helper _get_attr
+                places_val = self._get_attr(ev, "places_restantes")
+                places_str = f"({places_val} places)" if places_val is not None else ""
+                date_evt = self._get_attr(ev, "date_evenement", "")
+                titre = self._get_attr(ev, "titre", "N/A")
 
                 titre_affiche = f"{date_evt} | {titre} {places_str}"
                 choices_events.append({"name": titre_affiche, "value": ev})
 
             choices_events.append({"name": "--- Retour ---", "value": None})
 
-            # ---------- 4. Sélection utilisateur ----------
+            # ... (La partie 4: Sélection est OK) ...
             event_selectionne = inquirer.select(
-                message="Sélectionnez un événement pour voir les détails et réserver :",
+                message="Sélectionnez un événement pour voir les détails :",
                 choices=choices_events,
             ).execute()
 
             if event_selectionne is None:
                 return self
 
-            # Redirection vers la vue de réservation
-            return ReservationVue(evenement=event_selectionne)
+            # ---------- 5. On affiche les détails ----------
+            self._afficher_details_event(event_selectionne)
+            
+            # On utilise notre helper _get_attr
+            statut_evenement = self._get_attr(event_selectionne, 'statut')
+            is_available = (statut_evenement == 'disponible en ligne')
+
+            places_restantes = self._get_attr(event_selectionne, 'places_restantes')
+            has_places = (places_restantes is None) or (places_restantes > 0)
+
+            action_choices = []
+            if user:
+                # Si l'utilisateur est connecté, on vérifie s'il peut réserver
+                if is_available and has_places:
+                    action_choices.append("Réserver cet événement")
+                elif not is_available:
+                    print("ℹ️ Cet événement n'est pas (ou plus) disponible à la réservation.")
+                elif not has_places:
+                    print("ℹ️ Cet événement est complet.")
+            else:
+                # L'utilisateur n'est pas connecté
+                print("ℹ️ Vous devez être connecté pour réserver.")
+
+            action_choices.append("Retour à la liste")
+
+            choix_detail = inquirer.select(
+                message="Que souhaitez-vous faire ?",
+                choices=action_choices,
+            ).execute()
+
+            if choix_detail == "Réserver cet événement":
+                return ReservationVue(evenement=event_selectionne)
+            else:
+                return self
 
         except Exception as e:
             print(f"⚠️ Erreur lors de la récupération des événements : {e}")
             input("(Entrée) pour continuer...")
             return self
+
+    
+    # --- FONCTION DÉTAILS (CORRIGÉ) ---
+    def _afficher_details_event(self, ev: Any) -> None:
+        """
+        Affiche une vue détaillée d'un événement (gère dict et objet).
+        """
+        print("\n" + "=" * 50)
+        print("          DÉTAIL DE L'ÉVÉNEMENT")
+        print("=" * 50)
+
+        # On utilise notre helper _get_attr pour tout
+        print(f"  Titre     : {self._get_attr(ev, 'titre', 'N/A')}")
+        print(f"  Date      : {self._get_attr(ev, 'date_evenement', 'N/A')}")
+        lieu = self._get_attr(ev, 'ville') or self._get_attr(ev, 'adresse') or 'N/A'
+        print(f"  Lieu      : {lieu}")
+        print(f"  Capacité  : {self._get_attr(ev, 'capacite', 'N/A')}")
+        
+        places_restantes = self._get_attr(ev, 'places_restantes')
+        if places_restantes is not None:
+             print(f"  Places    : {places_restantes}")
+        else:
+             print(f"  Places    : (calcul non disponible sur cette vue)")
+             
+        print(f"  Statut    : {self._get_attr(ev, 'statut', 'N/A')}")
+        print(f"  Catégorie : {self._get_attr(ev, 'categorie', 'N/A')}")
+        print("-" * 50)
+        print(f"  Description : \n  {self._get_attr(ev, 'description', 'Aucune description.')}")
+        
+        print("=" * 50 + "\n")

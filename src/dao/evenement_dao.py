@@ -121,6 +121,10 @@ class EvenementDao:
             with con.cursor() as curs:
                 curs.execute(query, params)
                 row = curs.fetchone()
+                con.commit()
+
+                if not row:
+                    return None
 
         return EvenementModelOut(
             id_evenement=row["id_evenement"],

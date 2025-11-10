@@ -1,5 +1,5 @@
 # src/view/reservations/reservation_vue.py
-from typing import Optional, Any
+from typing import Optional, Any, Union
 from datetime import date
 from InquirerPy import inquirer
 
@@ -10,18 +10,28 @@ from view.session import Session
 from service.reservation_service import ReservationService
 from service.evenement_service import EvenementService
 from model.reservation_models import ReservationModelIn
+# On importe EvenementModelOut pour les type hints
+try:
+    from model.evenement_models import EvenementModelOut
+except ImportError:
+    EvenementModelOut = object # Fallback si le fichier n'existe pas
 
 # ➕ Envoi d’e-mail de confirmation
 from dotenv import load_dotenv
-from utils.api_brevo import send_email_brevo
+try:
+    from utils.api_brevo import send_email_brevo
+    LOADED_BREVO = True
+except ImportError:
+    LOADED_BREVO = False
+    print("WARNING: 'api_brevo' non trouvé. L'envoi d'email sera désactivé.")
 load_dotenv()
 
 
 class ReservationVue(VueAbstraite):
     """
     Vue console : permet à un utilisateur de réserver une place pour un événement.
-    - Utilise ReservationService et EvenementService.
-    - Envoie un e-mail de confirmation (best-effort).
+    Gère à la fois les dictionnaires (de ConsulterVue) et les objets (de son propre
+    sélecteur).
     """
 
     def __init__(self, message: str = "", evenement: Optional[Any] = None):
@@ -30,7 +40,18 @@ class ReservationVue(VueAbstraite):
         self.user = self.session.utilisateur
         self.reservation_service = ReservationService()
         self.evenement_service = EvenementService()
-        self.evenement = evenement
+        self.evenement = evenement # Garde l'événement (dict ou objet)
+
+    # --- HELPER (la méthode robuste) ---
+    @staticmethod
+    def _get_attr(obj: Any, key: str, default=None):
+        """Accède à un attribut/clé, que ce soit un dict ou un objet."""
+        if obj is None:
+            return default
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
+    # --- FIN HELPER ---
 
     # ----------------- Cycle Vue -----------------
     def afficher(self) -> None:
@@ -72,12 +93,17 @@ class ReservationVue(VueAbstraite):
                 return ConsulterVue("Retour au menu précédent.")
             self.evenement = choix_evt
 
-        evt = self.evenement
-        print(f"\nÉvénement sélectionné : {evt.titre} ({evt.date_evenement})")
+        evt = self.evenement 
+
+        # --- CORRECTION ---
+        titre_evt = self._get_attr(evt, 'titre', 'N/A')
+        date_evt = self._get_attr(evt, 'date_evenement', 'N/A')
+        print(f"\nÉvénement sélectionné : {titre_evt} ({date_evt})")
 
         # --- Étape 2 : vérifier les places restantes ---
-        if hasattr(evt, "places_restantes") and evt.places_restantes == 0:
-            print("⚠️  L'événement est complet.")
+        places = self._get_attr(evt, "places_restantes")
+        if places is not None and places <= 0: # Correction: <= 0
+            print("⚠️  L'événement est complet.")
             return ConsulterVue("Événement complet.")
 
         # --- Étape 3 : saisie des options de réservation ---
@@ -89,10 +115,17 @@ class ReservationVue(VueAbstraite):
         boisson = inquirer.confirm(message="Souhaitez-vous une boisson ?", default=False).execute()
 
         # --- Étape 4 : construction du modèle ---
+        
+        # --- CORRECTION ---
+        id_evt = self._get_attr(evt, 'id_evenement')
+        if not id_evt:
+             print("❌ Erreur : Impossible de trouver l'ID de cet événement.")
+             return ConnexionClientVue("Erreur de réservation.")
+
         resa_in = ReservationModelIn(
             fk_utilisateur=self.user.id_utilisateur,
-            fk_evenement=evt.id_evenement,
-            date_reservation=date.today(),
+            fk_evenement=id_evt, # <-- CORRIGÉ
+            # date_reservation n'est pas dans ton ReservationModelIn
             bus_aller=bus_aller,
             bus_retour=bus_retour,
             adherent=adherent,
@@ -111,37 +144,38 @@ class ReservationVue(VueAbstraite):
             print("❌ La réservation n’a pas pu être créée (peut-être déjà existante ?).")
             return ConnexionClientVue("Échec de la réservation.")
 
-        print(f"✅ Réservation confirmée pour {evt.titre} ({evt.date_evenement})")
+        print(f"✅ Réservation confirmée pour {titre_evt} ({date_evt})") # <-- CORRIGÉ
 
         # --- Étape 6 : e-mail de confirmation ---
-        try:
-            subject = "Confirmation de votre réservation — BDE Ensai"
-            message_text = (
-                f"Bonjour {self.user.prenom} {self.user.nom},\n\n"
-                f"Votre réservation pour l’événement « {evt.titre} » du {evt.date_evenement} est confirmée.\n\n"
-                f"Options :\n"
-                f" - Bus aller : {'Oui' if bus_aller else 'Non'}\n"
-                f" - Bus retour : {'Oui' if bus_retour else 'Non'}\n"
-                f" - Adhérent : {'Oui' if adherent else 'Non'}\n"
-                f" - SAM : {'Oui' if sam else 'Non'}\n"
-                f" - Boisson : {'Oui' if boisson else 'Non'}\n\n"
-                "Si vous n’êtes pas à l’origine de cette action, veuillez nous contacter.\n\n"
-                "— L’équipe du BDE Ensai"
-            )
+        if LOADED_BREVO: # On n'essaie pas si l'import a échoué
+            try:
+                subject = "Confirmation de votre réservation — BDE Ensai"
+                message_text = (
+                    f"Bonjour {self.user.prenom} {self.user.nom},\n\n"
+                    f"Votre réservation pour l’événement « {titre_evt} » du {date_evt} est confirmée.\n\n" # <-- CORRIGÉ
+                    f"Options :\n"
+                    f" - Bus aller : {'Oui' if bus_aller else 'Non'}\n"
+                    f" - Bus retour : {'Oui' if bus_retour else 'Non'}\n"
+                    f" - Adhérent : {'Oui' if adherent else 'Non'}\n"
+                    f" - SAM : {'Oui' if sam else 'Non'}\n"
+                    f" - Boisson : {'Oui' if boisson else 'Non'}\n\n"
+                    "Si vous n’êtes pas à l’origine de cette action, veuillez nous contacter.\n\n"
+                    "— L’équipe du BDE Ensai"
+                )
 
-            status, _ = send_email_brevo(
-                to_email=self.user.email,
-                subject=subject,
-                message_text=message_text,
-            )
+                status, _ = send_email_brevo(
+                    to_email=self.user.email,
+                    subject=subject,
+                    message_text=message_text,
+                )
 
-            if 200 <= status < 300:
-                print("📧 Un e-mail de confirmation vous a été envoyé.")
-            else:
-                print(f"⚠️  E-mail non envoyé (HTTP {status}).")
+                if 200 <= status < 300:
+                    print("📧 Un e-mail de confirmation vous a été envoyé.")
+                else:
+                    print(f"⚠️  E-mail non envoyé (HTTP {status}).")
 
-        except Exception as exc:
-            print(f"⚠️ Impossible d'envoyer l'e-mail de confirmation : {exc}")
+            except Exception as exc:
+                print(f"⚠️ Impossible d'envoyer l'e-mail de confirmation : {exc}")
 
         # --- Étape 7 : retour au menu client ---
         return ConnexionClientVue("Réservation effectuée avec succès.")

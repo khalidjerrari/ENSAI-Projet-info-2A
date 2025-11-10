@@ -74,7 +74,7 @@ class SupprimerEvenementVue(VueAbstraite):
 
         # --- Récupération de l'événement (pour affichage/confirmation) ---
         try:
-            evt = self.service.get_evenement_by_id(id_evenement)
+            evt = self.service.get_event_by_id(id_evenement)
         except Exception as e:
             logger.exception("Erreur lecture événement: %s", e)
             print("❌ Erreur lors de la récupération de l'événement.")
@@ -107,7 +107,7 @@ class SupprimerEvenementVue(VueAbstraite):
 
         # --- Suppression via service ---
         try:
-            ok = self.service.supprimer_evenement(id_evenement)
+            ok = self.service.delete_event(id_evenement)
         except Exception as e:
             logger.exception("Erreur suppression événement: %s", e)
             print("❌ Erreur lors de la suppression en base.")

@@ -4,7 +4,7 @@ from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 
-# ✅ On passe par les services
+# On passe par les services
 from service.reservation_service import ReservationService
 from service.evenement_service import EvenementService
 
@@ -33,13 +33,13 @@ class MesReservationsVue(VueAbstraite):
         super().afficher()
 
         if not self.session.est_connecte() or not self.user:
-            print("⛔ Vous n'êtes pas connecté.")
+            print("Vous n'êtes pas connecté.")
             return
 
-        print(f"--- 🗓️  Vos Réservations ({self.user.prenom}) ---")
+        print(f"--- Vos Réservations ({self.user.prenom}) ---")
 
         try:
-            # ✅ On passe par le service
+            # On passe par le service
             reservations = self.reservation_service.get_reservations_by_user(self.user.id_utilisateur)
 
             if not reservations:
@@ -88,7 +88,7 @@ class MesReservationsVue(VueAbstraite):
                 )
 
         except Exception as e:
-            print(f"\n❌ Erreur lors de la récupération de vos réservations : {e}")
+            print(f"\n Erreur lors de la récupération de vos réservations : {e}")
 
     def choisir_menu(self):
         """

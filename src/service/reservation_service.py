@@ -34,7 +34,7 @@ class ReservationService:
         """
         Crée une nouvelle réservation.
 
-        ✅ Règle métier :
+        Règle métier :
         Un utilisateur ne peut pas réserver deux fois le même événement,
         mais peut réserver plusieurs événements différents.
         """

@@ -5,7 +5,6 @@ from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 
-# ✅ On utilise maintenant la couche service
 from service.reservation_service import ReservationService
 from service.evenement_service import EvenementService
 
@@ -76,7 +75,7 @@ class ModificationReservationVue(VueAbstraite):
         if not user:
             return ConnexionClientVue("Erreur : Vous n'êtes plus connecté.")
 
-        # 1️⃣ Charger les réservations
+        # 1️ Charger les réservations
         try:
             reservations = self.reservation_service.get_reservations_by_user(user.id_utilisateur)
         except Exception as exc:
@@ -86,7 +85,7 @@ class ModificationReservationVue(VueAbstraite):
         if not reservations:
             return ConnexionClientVue("Vous n'avez aucune réservation à modifier.")
 
-        # 2️⃣ Préparer les choix à afficher
+        # 2 Préparer les choix à afficher
         ev_map = self._events_title_map()
         choices: List[Dict[str, Any]] = []
         for r in reservations:
@@ -97,7 +96,7 @@ class ModificationReservationVue(VueAbstraite):
 
         choices.append({"name": "--- Retour ---", "value": None})
 
-        # 3️⃣ Sélection d’une réservation
+        # 3️ Sélection d’une réservation
         selection = inquirer.select(
             message="Choisissez la réservation à modifier :",
             choices=choices,
@@ -108,7 +107,7 @@ class ModificationReservationVue(VueAbstraite):
 
         resa = selection
 
-        # 4️⃣ Valeurs actuelles
+        # 4️ Valeurs actuelles
         curr = {
             "bus_aller": bool(getattr(resa, "bus_aller", False)),
             "bus_retour": bool(getattr(resa, "bus_retour", False)),
@@ -117,7 +116,7 @@ class ModificationReservationVue(VueAbstraite):
             "boisson": bool(getattr(resa, "boisson", False)),
         }
 
-        # 5️⃣ Nouvelle saisie
+        # 5️ Nouvelle saisie
         new = {
             "bus_aller": inquirer.confirm(message="Bus ALLER ?", default=curr["bus_aller"], amark="✓").execute(),
             "bus_retour": inquirer.confirm(message="Bus RETOUR ?", default=curr["bus_retour"], amark="✓").execute(),
@@ -129,12 +128,12 @@ class ModificationReservationVue(VueAbstraite):
         if new == curr:
             return ConnexionClientVue("Aucun changement détecté.")
 
-        # 6️⃣ Confirmation
+        # 6️ Confirmation
         confirme = inquirer.confirm(message="Appliquer les modifications ?", default=True, amark="✓").execute()
         if not confirme:
             return ConnexionClientVue("Modification annulée.")
 
-        # 7️⃣ Mise à jour via le service
+        # 7️ Mise à jour via le service
         try:
             updated = self.reservation_service.update_reservation_flags(
                 resa.id_reservation,
@@ -146,7 +145,7 @@ class ModificationReservationVue(VueAbstraite):
             print(f"Erreur lors de la mise à jour : {exc}")
             return ConnexionClientVue("Échec de la modification de la réservation.")
 
-        # 8️⃣ E-mail de confirmation (best-effort)
+        # 8️ E-mail de confirmation (best-effort)
         try:
             ev_label = self._events_title_map().get(getattr(resa, "fk_evenement", None), f"Événement #{getattr(resa, 'fk_evenement', '?')}")
             options = [k.replace("_", " ").capitalize() for k, v in new.items() if v]

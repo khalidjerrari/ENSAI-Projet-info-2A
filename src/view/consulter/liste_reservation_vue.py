@@ -73,7 +73,7 @@ class ListeInscritsEvenementVue(VueAbstraite):
                 pass
 
         if not choices:
-            print("⚠️ Aucun événement disponible.")
+            print("Aucun événement disponible.")
             return None
 
         choices.append({"name": "--- Retour ---", "value": None})
@@ -105,7 +105,7 @@ class ListeInscritsEvenementVue(VueAbstraite):
         try:
             reservations = self.service_resa.get_reservations_by_event(id_evenement)
         except Exception as exc:
-            print(f"⚠️ Erreur lors de la récupération des réservations : {exc}")
+            print(f"Erreur lors de la récupération des réservations : {exc}")
             return []
 
         for r in reservations:
@@ -188,7 +188,7 @@ class ListeInscritsEvenementVue(VueAbstraite):
         super().afficher()
 
         if not self._is_admin():
-            print("⛔ Accès refusé : réservé aux administrateurs.")
+            print("Accès refusé : réservé aux administrateurs.")
             return
 
         if not self.id_evenement:

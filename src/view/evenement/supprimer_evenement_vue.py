@@ -57,7 +57,7 @@ class SupprimerEvenementVue(VueAbstraite):
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):
-            print("⛔ Accès refusé : vous devez être administrateur.")
+            print("Accès refusé : vous devez être administrateur.")
             return AccueilVue("Accès refusé")
 
         # --- Saisie de l'ID ---
@@ -69,7 +69,7 @@ class SupprimerEvenementVue(VueAbstraite):
             id_evenement = int(id_str)
         except Exception as e:
             logger.exception("Erreur saisie ID: %s", e)
-            print("⚠️ ID invalide.")
+            print("ID invalide.")
             return AccueilVue("Suppression annulée — retour au menu principal")
 
         # --- Récupération de l'événement (pour affichage/confirmation) ---
@@ -77,7 +77,7 @@ class SupprimerEvenementVue(VueAbstraite):
             evt = self.service.get_event_by_id(id_evenement)
         except Exception as e:
             logger.exception("Erreur lecture événement: %s", e)
-            print("❌ Erreur lors de la récupération de l'événement.")
+            print("Erreur lors de la récupération de l'événement.")
             return AccueilVue("Échec suppression — retour au menu principal")
 
         if evt is None:
@@ -92,7 +92,7 @@ class SupprimerEvenementVue(VueAbstraite):
         print(f"  - Ville        : {evt.ville or '—'}")
         print(f"  - Statut       : {evt.statut}")
 
-        print("\n⚠️  Attention :")
+        print("\n  Attention :")
         print("   - Toutes les réservations liées seront supprimées (ON DELETE CASCADE).")
         print("   - Les bus liés verront leur fk_evenement remis à NULL (ON DELETE SET NULL).")
 
@@ -110,12 +110,12 @@ class SupprimerEvenementVue(VueAbstraite):
             ok = self.service.delete_event(id_evenement)
         except Exception as e:
             logger.exception("Erreur suppression événement: %s", e)
-            print("❌ Erreur lors de la suppression en base.")
+            print(" Erreur lors de la suppression en base.")
             return AccueilVue("Échec suppression — retour au menu principal")
 
         if not ok:
             print("Aucune ligne supprimée (événement introuvable ?).")
             return AccueilVue("Échec suppression — retour au menu principal")
 
-        print(f"✅ Événement supprimé (id={id_evenement}).")
+        print(f"Événement supprimé (id={id_evenement}).")
         return AccueilVue("Événement supprimé — retour au menu principal")

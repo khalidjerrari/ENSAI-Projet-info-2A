@@ -23,7 +23,7 @@ class ModificationCompteVue:
     """
 
     def __init__(self):
-        self.service = UtilisateurService()  # ✅ Remplace le DAO
+        self.service = UtilisateurService()  # Remplace le DAO
 
     def afficher(self) -> None:
         print("\n--- MODIFIER MON COMPTE ---")
@@ -57,7 +57,7 @@ class ModificationCompteVue:
         if email != current.email:
             existing = self.service.get_user_by_email(email)
             if existing and existing.id_utilisateur != current.id_utilisateur:
-                print("❌ Un compte existe déjà avec cet email.")
+                print("Un compte existe déjà avec cet email.")
                 return AccueilVue("Modification annulée — retour au menu principal")
 
         # --- Construction du modèle de mise à jour ---
@@ -83,7 +83,7 @@ class ModificationCompteVue:
         try:
             user_out = self.service.update_user(updated_user)
         except ValueError as e:
-            print(f"❌ {e}")
+            print(f"{e}")
             return AccueilVue("Modification échouée — retour au menu principal")
         except Exception as e:
             print(f"⚠️ Erreur technique : {e}")
@@ -91,7 +91,7 @@ class ModificationCompteVue:
 
         # --- Rafraîchit la session ---
         Session().connexion(user_out)
-        print("✅ Profil mis à jour avec succès.")
+        print("Profil mis à jour avec succès.")
 
         # --- Option : changement de mot de passe ---
         changer_mdp = input("Souhaitez-vous changer votre mot de passe ? (o/N) : ").strip().lower()
@@ -100,10 +100,10 @@ class ModificationCompteVue:
             try:
                 reauth = self.service.authenticate_user(email=user_out.email, password=mot_de_passe_actuel)
                 if reauth is None or reauth.id_utilisateur != user_out.id_utilisateur:
-                    print("❌ Échec de la re-authentification (mot de passe incorrect).")
+                    print("Échec de la re-authentification (mot de passe incorrect).")
                     return AccueilVue("Profil mis à jour — mot de passe non changé.")
             except Exception as exc:
-                print(f"⚠️ Erreur technique lors de la vérification du mot de passe : {exc}")
+                print(f"Erreur technique lors de la vérification du mot de passe : {exc}")
                 return AccueilVue("Erreur technique — retour au menu principal")
 
             new_pwd = pwinput.pwinput(prompt="Nouveau mot de passe : ", mask="*")
@@ -118,7 +118,7 @@ class ModificationCompteVue:
             try:
                 ok = self.service.change_user_password(user_out.id_utilisateur, new_pwd)
                 if not ok:
-                    print("⚠️ Le mot de passe n’a pas pu être modifié.")
+                    print("Le mot de passe n’a pas pu être modifié.")
                 else:
                     print("✅ Mot de passe mis à jour.")
                     self._send_mail_notification(
@@ -130,7 +130,7 @@ class ModificationCompteVue:
                         "Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.",
                     )
             except Exception as exc:
-                print(f"⚠️ Erreur lors du changement de mot de passe : {exc}")
+                print(f"Erreur lors du changement de mot de passe : {exc}")
 
         # --- E-mail de confirmation de modification de profil ---
         self._send_mail_notification(
@@ -157,9 +157,9 @@ class ModificationCompteVue:
                 message_text=message_text,
             )
             if 200 <= status < 300:
-                print(f"📧 E-mail envoyé : {subject}")
+                print(f"E-mail envoyé : {subject}")
             else:
-                print(f"⚠️ E-mail non envoyé (HTTP {status}).")
+                print(f"E-mail non envoyé (HTTP {status}).")
         except Exception as e:
             print(f"Erreur envoi e-mail : {e}")
 

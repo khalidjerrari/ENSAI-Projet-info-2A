@@ -6,7 +6,7 @@ from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 
-# ✅ Passage aux services
+# Passage aux services
 from service.reservation_service import ReservationService
 from service.evenement_service import EvenementService
 from model.reservation_models import ReservationModelIn
@@ -16,7 +16,7 @@ try:
 except ImportError:
     EvenementModelOut = object # Fallback si le fichier n'existe pas
 
-# ➕ Envoi d’e-mail de confirmation
+# Envoi d’e-mail de confirmation
 from dotenv import load_dotenv
 try:
     from utils.api_brevo import send_email_brevo
@@ -59,7 +59,7 @@ class ReservationVue(VueAbstraite):
         Affiche le titre de la vue pour réserver un événement.
         """
         super().afficher()
-        print("\n--- 🎟️ Réservation d’un événement ---")
+        print("\n--- Réservation d’un événement ---")
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
         """
@@ -71,7 +71,7 @@ class ReservationVue(VueAbstraite):
 
         # --- Vérification de la connexion ---
         if not self.session.est_connecte() or not self.user:
-            print("⛔ Vous devez être connecté pour réserver.")
+            print("Vous devez être connecté pour réserver.")
             return ConsulterVue("Connexion requise pour réserver.")
 
         # --- Étape 1 : sélectionner ou confirmer l’événement ---
@@ -95,15 +95,14 @@ class ReservationVue(VueAbstraite):
 
         evt = self.evenement 
 
-        # --- CORRECTION ---
         titre_evt = self._get_attr(evt, 'titre', 'N/A')
         date_evt = self._get_attr(evt, 'date_evenement', 'N/A')
         print(f"\nÉvénement sélectionné : {titre_evt} ({date_evt})")
 
         # --- Étape 2 : vérifier les places restantes ---
         places = self._get_attr(evt, "places_restantes")
-        if places is not None and places <= 0: # Correction: <= 0
-            print("⚠️  L'événement est complet.")
+        if places is not None and places <= 0:# Correction: <= 0
+            print("L'événement est complet.")
             return ConsulterVue("Événement complet.")
 
         # --- Étape 3 : saisie des options de réservation ---
@@ -116,16 +115,14 @@ class ReservationVue(VueAbstraite):
 
         # --- Étape 4 : construction du modèle ---
         
-        # --- CORRECTION ---
         id_evt = self._get_attr(evt, 'id_evenement')
         if not id_evt:
-             print("❌ Erreur : Impossible de trouver l'ID de cet événement.")
+             print("Erreur : Impossible de trouver l'ID de cet événement.")
              return ConnexionClientVue("Erreur de réservation.")
 
         resa_in = ReservationModelIn(
             fk_utilisateur=self.user.id_utilisateur,
-            fk_evenement=id_evt, # <-- CORRIGÉ
-            # date_reservation n'est pas dans ton ReservationModelIn
+            fk_evenement=id_evt, 
             bus_aller=bus_aller,
             bus_retour=bus_retour,
             adherent=adherent,
@@ -137,14 +134,14 @@ class ReservationVue(VueAbstraite):
         try:
             resa_out = self.reservation_service.create_reservation(resa_in)
         except Exception as e:
-            print(f"❌ Erreur lors de la création de la réservation : {e}")
+            print(f"Erreur lors de la création de la réservation : {e}")
             return ConnexionClientVue("Erreur lors de la réservation.")
 
         if not resa_out:
-            print("❌ La réservation n’a pas pu être créée (peut-être déjà existante ?).")
+            print("La réservation n’a pas pu être créée (peut-être déjà existante ?).")
             return ConnexionClientVue("Échec de la réservation.")
 
-        print(f"✅ Réservation confirmée pour {titre_evt} ({date_evt})") # <-- CORRIGÉ
+        print(f"Réservation confirmée pour {titre_evt} ({date_evt})")
 
         # --- Étape 6 : e-mail de confirmation ---
         if LOADED_BREVO: # On n'essaie pas si l'import a échoué
@@ -152,7 +149,7 @@ class ReservationVue(VueAbstraite):
                 subject = "Confirmation de votre réservation — BDE Ensai"
                 message_text = (
                     f"Bonjour {self.user.prenom} {self.user.nom},\n\n"
-                    f"Votre réservation pour l’événement « {titre_evt} » du {date_evt} est confirmée.\n\n" # <-- CORRIGÉ
+                    f"Votre réservation pour l’événement « {titre_evt} » du {date_evt} est confirmée.\n\n"
                     f"Options :\n"
                     f" - Bus aller : {'Oui' if bus_aller else 'Non'}\n"
                     f" - Bus retour : {'Oui' if bus_retour else 'Non'}\n"
@@ -170,12 +167,12 @@ class ReservationVue(VueAbstraite):
                 )
 
                 if 200 <= status < 300:
-                    print("📧 Un e-mail de confirmation vous a été envoyé.")
+                    print("Un e-mail de confirmation vous a été envoyé.")
                 else:
-                    print(f"⚠️  E-mail non envoyé (HTTP {status}).")
+                    print(f"E-mail non envoyé (HTTP {status}).")
 
             except Exception as exc:
-                print(f"⚠️ Impossible d'envoyer l'e-mail de confirmation : {exc}")
+                print(f"Impossible d'envoyer l'e-mail de confirmation : {exc}")
 
         # --- Étape 7 : retour au menu client ---
         return ConnexionClientVue("Réservation effectuée avec succès.")

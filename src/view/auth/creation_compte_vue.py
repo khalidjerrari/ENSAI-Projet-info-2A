@@ -21,7 +21,7 @@ class CreationCompteVue:
 
     def __init__(self, message: str = ""):
         self.message = message
-        self.service = UtilisateurService()  # ✅ on passe par le service
+        self.service = UtilisateurService()  # on passe par le service
 
     def afficher(self) -> None:
         print("\n--- CRÉER UN COMPTE ---")
@@ -65,7 +65,7 @@ class CreationCompteVue:
                 administrateur=False,
             )
 
-            user_out: UtilisateurModelOut = self.service.create_user(user_in)  # ✅ Service
+            user_out: UtilisateurModelOut = self.service.create_user(user_in)  # Service
         except ValidationError as ve:
             print("\n Données invalides :")
             for err in ve.errors():
@@ -74,16 +74,16 @@ class CreationCompteVue:
                 print(f" - {loc}: {msg}")
             return AccueilVue("Création annulée — retour au menu principal")
         except ValueError as e:
-            print(f"❌ {e}")
+            print(f" {e}")
             return AccueilVue("Création annulée — retour au menu principal")
         except Exception as e:
-            print(f"⚠️ Erreur technique lors de la création du compte : {e}")
+            print(f"Erreur technique lors de la création du compte : {e}")
             return AccueilVue("Erreur technique — retour au menu principal")
 
         # --- Connexion automatique ---
         try:
             Session().connexion(user_out)
-            print(f"✅ Compte créé et connecté : {user_out.prenom} {user_out.nom}")
+            print(f" Compte créé et connecté : {user_out.prenom} {user_out.nom}")
         except Exception as exc:
             print(f"Compte créé mais échec de la connexion automatique : {exc}")
 
@@ -103,9 +103,9 @@ class CreationCompteVue:
                 message_text=message_text,
             )
             if 200 <= status < 300:
-                print("📧 Un e-mail de confirmation vous a été envoyé 🎉")
+                print("Un e-mail de confirmation vous a été envoyé 🎉")
             else:
-                print(f"⚠️ L'e-mail de confirmation n'a pas pu être envoyé (HTTP {status}).")
+                print(f" L'e-mail de confirmation n'a pas pu être envoyé (HTTP {status}).")
         except Exception as exc:
             print(f"Impossible d'envoyer l'e-mail de confirmation : {exc}")
 

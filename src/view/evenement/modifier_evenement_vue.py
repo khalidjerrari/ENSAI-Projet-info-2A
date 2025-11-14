@@ -11,7 +11,7 @@ from view.vue_abstraite import VueAbstraite
 from view.accueil.accueil_vue import AccueilVue
 from view.session import Session
 
-# ✅ Nouveau : import du service
+# Nouveau : import du service
 from service.evenement_service import EvenementService
 from model.evenement_models import EvenementModelOut
 
@@ -33,7 +33,7 @@ class ModifierEvenementVue(VueAbstraite):
 
     def __init__(self) -> None:
         super().__init__("Modification d’un événement")
-        self.service = EvenementService()  # ✅ Remplace le DAO
+        self.service = EvenementService()  # Remplace le DAO
 
     # ---------- WRAPPERS : autorisent l'appel sur la classe ----------
 
@@ -64,7 +64,7 @@ class ModifierEvenementVue(VueAbstraite):
         sess = Session()
         user = sess.utilisateur
         if not sess.est_connecte() or not getattr(user, "administrateur", False):
-            print("⛔ Accès refusé : vous devez être administrateur.")
+            print("Accès refusé : vous devez être administrateur.")
             return AccueilVue("Accès refusé")
 
         # --- Sélection de l'événement à modifier ---
@@ -76,14 +76,14 @@ class ModifierEvenementVue(VueAbstraite):
             id_evenement = int(id_str)
         except Exception as e:
             logger.exception("Erreur saisie ID: %s", e)
-            print("⚠️ ID invalide.")
+            print("ID invalide.")
             return AccueilVue("Modification annulée — retour au menu principal")
 
         try:
             evt = self.service.get_event_by_id(id_evenement)
         except Exception as e:
             logger.exception("Erreur récupération événement: %s", e)
-            print("❌ Erreur technique lors de la recherche.")
+            print("Erreur technique lors de la recherche.")
             return AccueilVue("Erreur technique — retour au menu principal")
 
         if evt is None:
@@ -185,7 +185,7 @@ class ModifierEvenementVue(VueAbstraite):
             )
 
         except ValidationError as ve:
-            print("⚠️ Données invalides :")
+            print("Données invalides :")
             for err in ve.errors():
                 loc = ".".join(str(x) for x in err.get("loc", []))
                 msg = err.get("msg", "erreur")
@@ -194,7 +194,7 @@ class ModifierEvenementVue(VueAbstraite):
             return AccueilVue("Modification annulée — retour au menu principal")
         except Exception as e:
             logger.exception("Erreur de saisie: %s", e)
-            print("⚠️ Erreur de saisie.")
+            print("Erreur de saisie.")
             return AccueilVue("Modification annulée — retour au menu principal")
 
         # --- Appel du service pour mise à jour ---
@@ -202,14 +202,14 @@ class ModifierEvenementVue(VueAbstraite):
             updated = self.service.update_event(evt_out)
         except Exception as e:
             logger.exception("Erreur update événement: %s", e)
-            print("❌ Erreur lors de la mise à jour en base (contrainte ?).")
+            print("Erreur lors de la mise à jour en base (contrainte ?).")
             return AccueilVue("Échec modification — retour au menu principal")
 
         if updated is None:
             print("Aucune ligne modifiée (événement introuvable ?).")
             return AccueilVue("Échec modification — retour au menu principal")
 
-        print(f"✅ Événement mis à jour (id={updated.id_evenement}) : {updated.titre} — date {updated.date_evenement}")
+        print(f"Événement mis à jour (id={updated.id_evenement}) : {updated.titre} — date {updated.date_evenement}")
         return AccueilVue("Événement modifié — retour au menu principal")
 
 

@@ -32,7 +32,7 @@ class StatistiquesInscriptionsVue(VueAbstraite):
         try:
             return self.service_evt.lister_tous(limit=500)
         except Exception as exc:
-            print(f"⚠️ Erreur lors du chargement des événements : {exc}")
+            print(f"Erreur lors du chargement des événements : {exc}")
             return []
 
     def _load_reservations(self, id_evenement: int) -> List[Any]:
@@ -90,7 +90,7 @@ class StatistiquesInscriptionsVue(VueAbstraite):
             print("Aucun événement trouvé.")
             return
 
-        print("\n--- 📊 Statistiques globales (tous les événements) ---")
+        print("\n--- Statistiques globales (tous les événements) ---")
         print(f"{'ID':>4} | {'Date':<10} | {'Titre':<25} | {'Cap.':>5} | {'Inscrits':>9} | {'Restantes':>10} | {'Occup.%':>8} | {'SAM':>4} | {'Adh.':>5} | {'Payés':>6}")
         print("-" * 95)
 
@@ -112,7 +112,7 @@ class StatistiquesInscriptionsVue(VueAbstraite):
         super().afficher()
 
         if not self._is_admin():
-            print("⛔ Accès refusé : réservé aux administrateurs.")
+            print("Accès refusé : réservé aux administrateurs.")
             return
 
         tableau = self._compute_stats_globale()

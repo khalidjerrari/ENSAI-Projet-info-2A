@@ -34,7 +34,7 @@ class ModificationCompteVue:
         # --- Vérifie la connexion ---
         current: Optional[UtilisateurModelOut] = Session().utilisateur
         if current is None:
-            print("⚠️ Vous devez être connecté pour modifier votre compte.")
+            print("Vous devez être connecté pour modifier votre compte.")
             return AccueilVue("Modification annulée — retour au menu principal")
 
         # --- Saisie avec valeurs actuelles ---
@@ -86,7 +86,7 @@ class ModificationCompteVue:
             print(f"{e}")
             return AccueilVue("Modification échouée — retour au menu principal")
         except Exception as e:
-            print(f"⚠️ Erreur technique : {e}")
+            print(f"Erreur technique : {e}")
             return AccueilVue("Modification échouée — retour au menu principal")
 
         # --- Rafraîchit la session ---
@@ -118,9 +118,9 @@ class ModificationCompteVue:
             try:
                 ok = self.service.change_user_password(user_out.id_utilisateur, new_pwd)
                 if not ok:
-                    print("Le mot de passe n’a pas pu être modifié.")
+                    print("Le mot de passe n'a pas pu être modifié.")
                 else:
-                    print("✅ Mot de passe mis à jour.")
+                    print("Mot de passe mis à jour.")
                     self._send_mail_notification(
                         user_out.email,
                         user_out.prenom,
@@ -148,9 +148,9 @@ class ModificationCompteVue:
     # Helpers validations et notifications
     # =========================
     def _send_mail_notification(self, to_email: str, prenom: str, nom: str, subject: str, message_body: str):
-        """Envoi d’un e-mail de notification (best-effort)."""
+        """Envoi d'un e-mail de notification (best-effort)."""
         try:
-            message_text = f"Bonjour {prenom} {nom},\n\n{message_body}\n\n— L’équipe du BDE Ensai"
+            message_text = f"Bonjour {prenom} {nom},\n\n{message_body}\n\n— L'équipe du BDE Ensai"
             status, response = send_email_brevo(
                 to_email=to_email,
                 subject=subject,

@@ -6,8 +6,8 @@ from utils.log_init import initialiser_logs
 from view.accueil.accueil_vue import AccueilVue
 
 """
-Point d’entrée de l’application : charge la configuration, initialise les logs,
-puis exécute la boucle principale d’affichage et de navigation entre les vues.
+Point d'entrée de l'application : charge la configuration, initialise les logs,
+puis exécute la boucle principale d'affichage et de navigation entre les vues.
 Gère les erreurs et assure un arrêt propre du programme.
 """
 

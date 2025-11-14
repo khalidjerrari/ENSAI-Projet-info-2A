@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from dotenv import load_dotenv
 
 from view.session import Session
-from service.utilisateur_service import UtilisateurService  # Nouveau import
+from service.utilisateur_service import UtilisateurService
 from model.utilisateur_models import UtilisateurModelIn, UtilisateurModelOut
 from utils.api_brevo import send_email_brevo
 

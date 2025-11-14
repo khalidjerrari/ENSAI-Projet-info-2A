@@ -15,11 +15,11 @@ class ReservationService:
 
     # ---------- READ ----------
     def get_reservations_by_user(self, id_utilisateur: int) -> List[ReservationModelOut]:
-        """Récupère toutes les réservations d’un utilisateur."""
+        """Récupère toutes les réservations d'un utilisateur."""
         return self.dao.find_by_user(id_utilisateur)
 
     def get_reservations_by_event(self, id_evenement: int) -> List[ReservationModelOut]:
-        """Récupère toutes les réservations d’un événement."""
+        """Récupère toutes les réservations d'un événement."""
         return self.dao.find_by_event(id_evenement)
 
     def get_reservation_by_id(self, id_reservation: int) -> ReservationModelOut:
@@ -61,7 +61,7 @@ class ReservationService:
         sam: Optional[bool] = None,
         boisson: Optional[bool] = None,
     ) -> ReservationModelOut:
-        """Met à jour les options (flags) d’une réservation existante."""
+        """Met à jour les options (flags) d'une réservation existante."""
         existing = self.dao.find_by_id(id_reservation)
         if not existing:
             raise ValueError("Impossible de mettre à jour : réservation introuvable.")

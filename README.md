@@ -147,14 +147,15 @@ Ensure that:
 
 ### Launch the Application
 
-```bash
-python src/main.py
-```
-
 On the first launch, choose **Reset database** to:
 
 * Run the program `src/utils/reset_database.py`
 * Initialize the database using the SQL scripts in the `data` folder
+
+
+```bash
+python src/main.py
+```
 
 ---
 

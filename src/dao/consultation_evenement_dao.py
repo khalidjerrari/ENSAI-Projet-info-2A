@@ -10,7 +10,7 @@ from model.evenement_models import EvenementModelOut
 class ConsultationEvenementDao:
     """
     DAO de consultation (lecture seule) des événements.
-    ✅ Minimalement adapté au nouveau schéma SQL (suppression de fk_transport, comptage par événement).
+    Minimalement adapté au nouveau schéma SQL (suppression de fk_transport, comptage par événement).
     """
 
     # ---------- Listes simples ----------

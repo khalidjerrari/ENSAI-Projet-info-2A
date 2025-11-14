@@ -1,14 +1,43 @@
-# ENSAI-2A-projet-info-template
+# Shotgun info Project-Documentatoion
 
-Template for the ENSAI 2nd year IT project.
+This project a simple application that serves as a foundation for the 2nd year IT project at ENSAI.
 
-This very simple application includes a few elements that may help with the info 2A project:
+It includes several technical components designed to illustrate and support good software-development practices:
 
-- Layer programming (DAO, service, view, business_object)
-- Connection to a database
-- Terminal interface (view layer) with [inquirerPy](https://inquirerpy.readthedocs.io/en/latest/)
-- Calling a Webservice
-- Creating a webservice
+--Main Features--
+
+--Layered  Architecture 
+The application follows a modular, layered architecture composed of:
+
+-DAO (Data Acces Object): Manages data access and interactions with the database
+
+-Service: Contains business logic and core application process
+
+-View: Terminal based user interface
+
+-Business Object: Data structures representing domain entities
+This separation improves readability, maintainability, and future extensibility
+
+--Database Connection
+A database connection is integrated into the project to:
+
+-store query data
+-centralize information
+-demonstrate SQL queries
+
+--Command line interface
+The application includes a terminal user interface built with InquirerPy, allowing for:
+
+-interactive menus
+-intuitive navigation
+-guided user input
+
+--Email sending with the Brevo API
+The project integrates the Brevo API to handle email sending. This allows the application to:
+
+-send automated notifications
+-confirm user actions
+-support communication workflows within the system
 
 
 ## :arrow_forward: Software and tools
@@ -17,6 +46,7 @@ This very simple application includes a few elements that may help with the info
 - [Python 3.13](https://www.python.org/)
 - [Git](https://git-scm.com/)
 - A [PostgreSQL](https://www.postgresql.org/) database
+-[Onyxia-SSPCloud](https://datalab.sspcloud.fr/my-services)
 
 
 ## :arrow_forward: Clone the repository
@@ -24,17 +54,26 @@ This very simple application includes a few elements that may help with the info
 - [ ] Open VSCode
 - [ ] Open **Git Bash**
 - [ ] Clone the repo
-  - `git clone https://github.com/ludo2ne/ENSAI-2A-projet-info-template.git`
+  - `git clone https://github.com/khalidjerrari/ENSAI-Projet-info-2A.git`
 
 
 ### Open Folder
 
-- [ ] Open **Visual Studio Code**
+- [ ] Open **Visual Studio Code** service on Onyxia
 - [ ] File > Open Folder
-- [ ] Select folder *ENSAI-2A-projet-info-template*
-  - *ENSAI-2A-projet-info-template* should be the root of your Explorer
+- [ ] Select folder *ENSAI-projet-info-2A*
+  - *ENSAI-projet-info-2A* should be the root of your Explorer
   - :warning: if not the application will not launch. Retry open folder
+-[] Start the **PostgreSQL** service on Onyxia 
+-[] Verify that database is accessible using the information in your .env file:
 
+```POSTGRES_HOST=
+POSTGRES_PORT=
+POSTGRES_DATABASE=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+```
+-[] Ensure that the schema projet_test_dao exists for units testing
 
 ## Repository Files Overview
 
@@ -69,7 +108,6 @@ You will also need a `.env` file. See below.
 | -------------------------- | ------------------------------------------------------------------------ |
 | `data`                     | SQL script containing data sets                                          |
 | `doc`                      | UML diagrams, project status...                                          |
-| `logs`                     | Containing logs files (once you have launched the application)           |
 | `src`                      | Folder containing Python files organized using a layered architecture    |
 
 
@@ -115,8 +153,8 @@ POSTGRES_SCHEMA=projet_test_dao
 
 TOKEN_BREVO=
 EMAIL_BREVO=
-
 ```
+Launch the application with the commande `python src/main.py`
 
 
 ## :arrow_forward: Unit tests

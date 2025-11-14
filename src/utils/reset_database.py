@@ -1,9 +1,4 @@
 import os
-import sys
-
-# Ajoute automatiquement le dossier parent (src/) au PYTHONPATH
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
 import logging
 import dotenv
 from unittest import mock

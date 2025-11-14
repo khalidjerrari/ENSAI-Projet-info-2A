@@ -25,9 +25,9 @@ class DBConnection(metaclass=Singleton):
                 options=f"-c search_path={os.getenv('POSTGRES_SCHEMA')}",
                 cursor_factory=RealDictCursor,
             )
-            print(f"✅ Connexion réussie au schéma : {os.getenv('POSTGRES_SCHEMA')}")
+            print(f"Connexion réussie au schéma : {os.getenv('POSTGRES_SCHEMA')}")
         except Exception as e:
-            print("❌ Erreur de connexion à la base de données :", e)
+            print("Erreur de connexion à la base de données :", e)
             raise
 
     @property

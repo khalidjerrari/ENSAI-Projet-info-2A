@@ -31,7 +31,7 @@ class ConnexionClientVue(VueAbstraite):
         # Vérifie la session
         user = Session().utilisateur
         if not user:
-            print("⚠️ Vous n'êtes plus connecté.")
+            print("Vous n'êtes plus connecté.")
             return AccueilVue()
 
         message = f"Connecté en tant que : {user.prenom} {user.nom}"
@@ -71,5 +71,5 @@ class ConnexionClientVue(VueAbstraite):
 
             case "Retour (Se déconnecter)":
                 Session().deconnexion()
-                print("✅ Déconnexion réussie.")
+                print("Déconnexion réussie.")
                 return AccueilVue("Vous avez été déconnecté.")

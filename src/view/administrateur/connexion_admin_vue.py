@@ -12,7 +12,7 @@ from view.evenement.creer_evenement_vue import CreerEvenementVue
 from view.evenement.modifier_evenement_vue import ModifierEvenementVue
 from view.evenement.supprimer_evenement_vue import SupprimerEvenementVue
 
-# ✅ On importe le service utilisateur pour la gestion de session
+# On importe le service utilisateur pour la gestion de session
 from service.utilisateur_service import UtilisateurService
 
 
@@ -38,7 +38,7 @@ class ConnexionAdminVue(VueAbstraite):
         # Vérification de la session
         user = self.session.utilisateur
         if not user:
-            print("⚠️  Vous n'êtes plus connecté.")
+            print(" Vous n'êtes plus connecté.")
             return AccueilVue("Session expirée, veuillez vous reconnecter.")
 
         # Message d’accueil

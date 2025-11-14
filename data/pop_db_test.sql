@@ -1,8 +1,8 @@
 -- 1) UTILISATEUR
 INSERT INTO utilisateur (nom, prenom, telephone, email, mot_de_passe, administrateur)
 VALUES
-('Dupont', 'Alice', '0601020304', '', '$2b$12$kasVuw8LUvVK3anAskV40.ATzMUuUF5r9sRIuJc17BG4o2G/XKtyi', FALSE),
-('Martin', 'Bob', '0605060708', 'bob.martinalice.dupont@email.com@email.com', '$2b$12$ZI9goAGUifVgF7dcZbNvgOjKED/Bfo193c5BDQW5RSaNxvkqu9QYa', TRUE),
+('Dupont', 'Alice', '0601020304', 'alice.dupont@email.com', '$2b$12$kasVuw8LUvVK3anAskV40.ATzMUuUF5r9sRIuJc17BG4o2G/XKtyi', FALSE),
+('Martin', 'Bob', '0605060708', 'bob.martin@email.com', '$2b$12$ZI9goAGUifVgF7dcZbNvgOjKED/Bfo193c5BDQW5RSaNxvkqu9QYa', TRUE),
 ('Durand', 'Caroline', '0608091011', 'caroline.durand@email.com', 'mdpCaroline123', FALSE),
 ('Petit', 'David', '0611121314', 'david.petit@email.com', 'mdpDavid123', FALSE);
 

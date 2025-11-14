@@ -5,7 +5,7 @@ from InquirerPy import inquirer
 from typing import Optional, Any, List
 
 from view.vue_abstraite import VueAbstraite
-from service.consultation_evenement_service import ConsultationEvenementService  # ✅ nouveau
+from service.consultation_evenement_service import ConsultationEvenementService  # nouveau
 from view.reservations.reservation_vue import ReservationVue
 
 
@@ -18,7 +18,7 @@ class ConsulterVue(VueAbstraite):
 
     def __init__(self) -> None:
         super().__init__("CONSULTER")
-        self.service = ConsultationEvenementService()  # ✅ on passe par le service
+        self.service = ConsultationEvenementService()  # on passe par le service
 
     def afficher(self) -> None:
         super().afficher()
@@ -141,12 +141,12 @@ class ConsulterVue(VueAbstraite):
                 if is_available and has_places:
                     action_choices.append("Réserver cet événement")
                 elif not is_available:
-                    print("ℹ️ Cet événement n'est pas (ou plus) disponible à la réservation.")
+                    print("Cet événement n'est pas (ou plus) disponible à la réservation.")
                 elif not has_places:
-                    print("ℹ️ Cet événement est complet.")
+                    print("Cet événement est complet.")
             else:
                 # L'utilisateur n'est pas connecté
-                print("ℹ️ Vous devez être connecté pour réserver.")
+                print("Vous devez être connecté pour réserver.")
 
             action_choices.append("Retour à la liste")
 
@@ -161,12 +161,12 @@ class ConsulterVue(VueAbstraite):
                 return self
 
         except Exception as e:
-            print(f"⚠️ Erreur lors de la récupération des événements : {e}")
+            print(f"Erreur lors de la récupération des événements : {e}")
             input("(Entrée) pour continuer...")
             return self
 
     
-    # --- FONCTION DÉTAILS (CORRIGÉ) ---
+    # --- FONCTION DÉTAILS ---
     def _afficher_details_event(self, ev: Any) -> None:
         """
         Affiche une vue détaillée d'un événement (gère dict et objet).

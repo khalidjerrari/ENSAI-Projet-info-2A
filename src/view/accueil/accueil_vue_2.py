@@ -19,7 +19,7 @@ class AccueilVue:
 
     def afficher(self) -> None:
         print("\n" + "=" * 40)
-        print(f"🚌  {self.titre}")
+        print(f" {self.titre}")
         print("=" * 40)
         print("0 - Menu principal")
         print("1 - Consulter")
@@ -30,9 +30,9 @@ class AccueilVue:
 
     def choisir_menu(self) -> Optional["AccueilVue"]:
         while True:
-            choix = input("👉 Entrez votre choix (0-4) : ").strip()
+            choix = input(" Entrez votre choix (0-4) : ").strip()
             if choix not in {"0", "1", "2", "3", "4"}:
-                print("❌ Choix invalide. Merci d’entrer un nombre entre 0 et 4.")
+                print(" Choix invalide. Merci d’entrer un nombre entre 0 et 4.")
                 continue
 
             if choix == "0":

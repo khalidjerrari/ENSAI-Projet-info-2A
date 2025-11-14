@@ -15,8 +15,8 @@ from view.client.connexion_client_vue import ConnexionClientVue
 
 class AccueilVue(VueAbstraite):
     """
-    Vue d’accueil de l’application.
-    Sert d’aiguillage entre :
+    Vue d'accueil de l'application.
+    Sert d'aiguillage entre :
       - Connexion / Création de compte / Consultation
       - Espace administrateur ou client selon le profil.
     """
@@ -48,7 +48,7 @@ class AccueilVue(VueAbstraite):
             "Quitter",
         ]
 
-        print("\n" + "-" * 10 + "\n🚌 Shotgun ENSAI\n" + "-" * 10 + "\n")
+        print("\n" + "-" * 10 + "\n Shotgun ENSAI\n" + "-" * 10 + "\n")
         choix = inquirer.select(message=message, choices=choices_list).execute()
 
         match choix:

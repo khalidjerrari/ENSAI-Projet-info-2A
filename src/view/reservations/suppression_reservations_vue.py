@@ -5,11 +5,11 @@ from InquirerPy import inquirer
 from view.vue_abstraite import VueAbstraite
 from view.session import Session
 
-# ✅ Passage à la couche service
+# Passage à la couche service
 from service.reservation_service import ReservationService
 from service.evenement_service import EvenementService
 
-# ✅ Envoi d'e-mail (Brevo)
+# Envoi d'e-mail (Brevo)
 from dotenv import load_dotenv
 from utils.api_brevo import send_email_brevo
 load_dotenv()
@@ -19,9 +19,9 @@ class SuppressionReservationVue(VueAbstraite):
     """
     Vue console pour supprimer une réservation de l'utilisateur connecté.
 
-    ✅ Refactorisée pour utiliser la couche service :
-      - `ReservationService` pour les opérations CRUD
-      - `EvenementService` pour les infos associées
+     Refactorisée pour utiliser la couche service :
+      - "ReservationService" pour les opérations CRUD
+      - "EvenementService" pour les infos associées
       - Plus de dépendance directe aux DAO
     """
 
@@ -63,7 +63,7 @@ class SuppressionReservationVue(VueAbstraite):
         Affiche l’en-tête indiquant la suppression d’une réservation.
         """
         super().afficher()
-        print("\n--- 🗑️  Supprimer une réservation ---")
+        print("\n---  Supprimer une réservation ---")
 
     def choisir_menu(self) -> Optional[VueAbstraite]:
         """
@@ -76,7 +76,7 @@ class SuppressionReservationVue(VueAbstraite):
         if not user:
             return ConnexionClientVue("Erreur : vous n'êtes pas connecté.")
 
-        # 1️⃣ Déterminer la réservation à supprimer
+        # 1️ Déterminer la réservation à supprimer
         resa = self._reservation_preselectionnee
         if resa is None:
             try:
@@ -105,14 +105,14 @@ class SuppressionReservationVue(VueAbstraite):
             if resa is None:
                 return ConnexionClientVue("Suppression annulée.")
 
-        # 2️⃣ Récapitulatif
+        # 2️ Récapitulatif
         ev_label = self._event_label(getattr(resa, "fk_evenement", None))
         print("\nVous allez supprimer la réservation suivante :")
         print(f"  • Réservation #{resa.id_reservation}")
         print(f"  • {ev_label}")
         print(f"  • Options : {self._flags_to_str(resa)}")
 
-        # 3️⃣ Double confirmation
+        # 3️ Double confirmation
         confirme = inquirer.confirm(
             message="Confirmer la suppression de cette réservation ?",
             default=False,
@@ -127,16 +127,16 @@ class SuppressionReservationVue(VueAbstraite):
         if saisie.strip().upper() != "SUPPRIMER":
             return ConnexionClientVue("Suppression annulée.")
 
-        # 4️⃣ Suppression via le service
+        # 4️ Suppression via le service
         try:
             ok = self.reservation_service.delete_reservation(resa.id_reservation)
             if not ok:
-                return ConnexionClientVue("❌ Échec de la suppression (aucune ligne affectée).")
+                return ConnexionClientVue("Échec de la suppression (aucune ligne affectée).")
         except Exception as exc:
             print(f"Erreur lors de la suppression : {exc}")
-            return ConnexionClientVue("❌ Échec de la suppression de la réservation.")
+            return ConnexionClientVue("Échec de la suppression de la réservation.")
 
-        # 5️⃣ E-mail de confirmation (best-effort)
+        # 5️ E-mail de confirmation (best-effort)
         try:
             subject = "Annulation de réservation — BDE Ensai"
             message_text = (
@@ -152,10 +152,10 @@ class SuppressionReservationVue(VueAbstraite):
                 message_text=message_text,
             )
             if 200 <= status < 300:
-                print("📧 Un e-mail de confirmation d'annulation vous a été envoyé.")
+                print("Un e-mail de confirmation d'annulation vous a été envoyé.")
             else:
-                print(f"⚠️  E-mail non envoyé (HTTP {status}).")
+                print(f" E-mail non envoyé (HTTP {status}).")
         except Exception as exc:
-            print(f"⚠️  Impossible d'envoyer l'e-mail de confirmation : {exc}")
+            print(f" Impossible d'envoyer l'e-mail de confirmation : {exc}")
 
         return ConnexionClientVue("✅ Réservation supprimée avec succès.")

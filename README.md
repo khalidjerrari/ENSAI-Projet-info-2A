@@ -1,244 +1,291 @@
-# Shotgun info Project-Documentatoion
 
-This project a simple application that serves as a foundation for the 2nd year IT project at ENSAI.
+---
 
-It includes several technical components designed to illustrate and support good software-development practices:
+#  Shotgun ENSAI – 2nd Year Project
 
---Main Features--
+> Event and reservation management application for the ENSAI Student Union (BDE)
 
---Layered  Architecture 
-The application follows a modular, layered architecture composed of:
+---
 
--DAO (Data Acces Object): Manages data access and interactions with the database
+##  Table of Contents
 
--Service: Contains business logic and core application process
+* [About](#-about)
+* [Main Features](#-main-features)
+* [Prerequisites](#-prerequisites)
+* [Installation](#-installation)
+* [Configuration](#-configuration)
+* [Usage](#-usage)
+* [Tests](#-tests)
+* [Logs](#-logs)
+* [Continuous Integration](#-continuous-integration)
+* [Project Structure](#-project-structure)
 
--View: Terminal based user interface
+---
 
--Business Object: Data structures representing domain entities
-This separation improves readability, maintainability, and future extensibility
+##  About
 
---Database Connection
-A database connection is integrated into the project to:
+This application serves as a foundation for the 2nd-year IT project at ENSAI. It demonstrates software development best practices through a complete event management application.
 
--store query data
--centralize information
--demonstrate SQL queries
+##  Main Features
 
---Command line interface
-The application includes a terminal user interface built with InquirerPy, allowing for:
+###  Layered Architecture
 
--interactive menus
--intuitive navigation
--guided user input
+The application follows a modular and maintainable architecture:
 
---Email sending with the Brevo API
-The project integrates the Brevo API to handle email sending. This allows the application to:
+* **DAO (Data Access Object)**: Manages database access
+* **Service**: Business logic and application processes
+* **View**: Command-line user interface
+* **Business Object**: Data structures representing domain entities
 
--send automated notifications
--confirm user actions
--support communication workflows within the system
+This separation improves code readability, maintainability, and extensibility.
 
+###  PostgreSQL Database
 
-## :arrow_forward: Software and tools
+* Centralized data storage
+* Optimized SQL queries
+* Management of relationships between entities
 
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [Python 3.13](https://www.python.org/)
-- [Git](https://git-scm.com/)
-- A [PostgreSQL](https://www.postgresql.org/) database
--[Onyxia-SSPCloud](https://datalab.sspcloud.fr/my-services)
+###  Command-Line Interface
 
+Interactive interface built with **InquirerPy** providing:
 
-## :arrow_forward: Clone the repository
+* Intuitive interactive menus
+* Guided navigation
+* Secure user input
 
-- [ ] Open VSCode
-- [ ] Open **Git Bash**
-- [ ] Clone the repo
-  - `git clone https://github.com/khalidjerrari/ENSAI-Projet-info-2A.git`
+###  Email Sending via Brevo API
 
+Integration of the Brevo API for:
 
-### Open Folder
+* Automated notifications
+* User action confirmations
+* Communication workflows
 
-- [ ] Open **Visual Studio Code** service on Onyxia
-- [ ] File > Open Folder
-- [ ] Select folder *ENSAI-projet-info-2A*
-  - *ENSAI-projet-info-2A* should be the root of your Explorer
-  - :warning: if not the application will not launch. Retry open folder
--[] Start the **PostgreSQL** service on Onyxia 
--[] Verify that database is accessible using the information in your .env file:
+---
 
-```POSTGRES_HOST=
-POSTGRES_PORT=
-POSTGRES_DATABASE=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
+##  Prerequisites
+
+Before starting, ensure the following are installed:
+
+* [Visual Studio Code](https://code.visualstudio.com/)
+* [Python 3.13](https://www.python.org/)
+* [Git](https://git-scm.com/)
+* A [PostgreSQL](https://www.postgresql.org/) database
+* Access to [Onyxia-SSPCloud](https://datalab.sspcloud.fr/my-services)
+
+---
+
+##  Installation
+
+### 1. Clone the Repository
+
+Open **Git Bash** and run:
+
+```bash
+git clone https://github.com/khalidjerrari/ENSAI-Projet-info-2A.git
 ```
--[] Ensure that the schema projet_test_dao exists for units testing
 
-## Repository Files Overview
+### 2. Open the Project in VSCode
 
+1. Launch **Visual Studio Code** on Onyxia
+2. Go to **File > Open Folder**
+3. Select the folder `ENSAI-projet-info-2A`
 
-| Item                       | Description                                                              |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `README.md`                | Provides useful information to present, install, and use the application |
-| `LICENSE`                  | Specifies the usage rights and licensing terms for the repository        |
+⚠️ **Important**: `ENSAI-projet-info-2A` must be the root in your Explorer. Otherwise, the application will not launch correctly.
 
-### Configuration files
+### 3. Install Python Dependencies
 
-This repository contains a large number of configuration files for setting the parameters of the various tools used.
-
-Normally, for the purposes of your project, you won't need to modify these files, except for `.env` and `requirements.txt`.
-
-
-| Item                       | Description                                                              |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `.github/workflows/ci.yml` | Automated workflow that runs predefined tasks (like testing, linting, or deploying) |
-| `.vscode/settings.json`    | Contains VS Code settings specific to this project                       |
-| `.coveragerc`              | Setup for test coverage                                                  |
-| `.gitignore`               | Lists the files and folders that should not be tracked by Git            |
-| `logging_config.yml`       | Setup for logging                                                        |
-| `requirements.txt`         | Lists the required Python packages for the project                       |
-
-You will also need a `.env` file. See below.
-
-
-### Folders
-
-| Item                       | Description                                                              |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `data`                     | SQL script containing data sets                                          |
-| `doc`                      | UML diagrams, project status...                                          |
-| `src`                      | Folder containing Python files organized using a layered architecture    |
-
-
-
-### Settings files
-
-This repository contains a large number of configuration files for setting the parameters of the various tools used.
-
-Normally, for the purposes of your project, you won't need to modify these files, except for `.env` and `requirements.txt`.
-
-
-## :arrow_forward: Install required packages
-
-- [ ] In Git Bash, run the following commands to:
-  - install all packages from file `requirements.txt`
-  - list all packages
+In the terminal (Git Bash), run:
 
 ```bash
 pip install -r requirements.txt
-pip list
+pip list  # Verify installation
 ```
 
+---
 
-## :arrow_forward: Environment variables
+##  Configuration
 
-You are now going to define environment variables to declare the database and webservice to which you are going to connect your python application.
+### 1. Start PostgreSQL
 
-At the root of the project :
+Start the **PostgreSQL** service on Onyxia.
 
-- [ ] Create a file called `.env`
-- [ ] Paste in and complete the elements below
+### 2. Create the `.env` File
 
-```default
+At the root of the project, create a `.env` file with the following content:
+
+```env
 PYTHONPATH=src
 
+# PostgreSQL Configuration
 POSTGRES_HOST=
 POSTGRES_PORT=
 POSTGRES_DATABASE=
 POSTGRES_USER=
 POSTGRES_PASSWORD=
 
+# Test Schema
 POSTGRES_SCHEMA=projet_test_dao
 
+# Brevo Configuration
 TOKEN_BREVO=
 EMAIL_BREVO=
 ```
-Launch the application with the commande `python src/main.py`
 
+Fill in the values with your connection information.
 
-## :arrow_forward: Unit tests
+### 3. Verify the Connection
 
-- [ ] In Git Bash: `pytest -v` 
-  - or `python -m pytest -v` if *pytest* has not been added to *PATH*
+Ensure that:
 
+* The database is accessible using the `.env` settings
+* The schema `projet_test_dao` exists for unit testing
 
-### TU DAO
+---
 
-To ensure tests are repeatable, safe, and **do not interfere with the real database**, we use a dedicated schema for unit testing.
+##  Usage
 
-The DAO unit tests use data from the `data/pop_db_test.sql` file.
+### Launch the Application
 
-This data is loaded into a separate schema (projet_test_dao) so as not to pollute the other data.
-
-
-### Test coverage
-
-It is also possible to generate test coverage using [Coverage](https://coverage.readthedocs.io/en/7.4.0/index.html)
-
-:bulb: The `.coveragerc` file can be used to modify the settings
-
-- [ ] `coverage run -m pytest`
-- [ ] `coverage report -m`
-- [ ] `coverage html`
-  - Download and open coverage_report/index.html
-
-
-
-## :arrow_forward: Launch the CLI application
-
-This application provides a very basic graphical interface for navigating between different menus.
-
-- [ ] In Git Bash: `python src/main.py`
-- [ ] On first launch, choose **Reset database**
-  - this calls the `src/utils/reset_database.py` program
-  - which will itself execute the SQL scripts in the `data` folder
-
-
-## :arrow_forward: Logs
-
-It is initialised in the `src/utils/log_init.py` module:
-
-- This is called when the application or webservice is started.
-- It uses the `logging_config.yml` file for configuration.
-  - to change the log level :arrow_right: *level* tag
-
-A decorator has been created in `src/utils/log_decorator.py`.
-
-When applied to a method, it will display in the logs :
-
-- input parameters
-- the output
-
-The logs can be viewed in the `logs` folder.
-
-Example of logs :
-
-```
-07/08/2024 09:07:07 - INFO     - ConnexionVue
-07/08/2024 09:07:08 - INFO     -     JoueurService.se_connecter('a', '*****') - DEBUT
-07/08/2024 09:07:08 - INFO     -         JoueurDao.se_connecter('a', '*****') - DEBUT
-07/08/2024 09:07:08 - INFO     -         JoueurDao.se_connecter('a', '*****') - FIN
-07/08/2024 09:07:08 - INFO     -            └─> Sortie : Joueur(a, 20 ans)
-07/08/2024 09:07:08 - INFO     -     JoueurService.se_connecter('a', '*****') - FIN
-07/08/2024 09:07:08 - INFO     -        └─> Sortie : Joueur(a, 20 ans)
-07/08/2024 09:07:08 - INFO     - MenuJoueurVue
+```bash
+python src/main.py
 ```
 
+On the first launch, choose **Reset database** to:
+
+* Run the program `src/utils/reset_database.py`
+* Initialize the database using the SQL scripts in the `data` folder
+
+---
+
+##  Tests
+
+### Run All Tests
+
+```bash
+pytest -v
+# or if pytest is not in PATH
+python -m pytest -v
+```
+
+### DAO Tests
+
+DAO unit tests use:
+
+* A dedicated schema (`projet_test_dao`) to avoid polluting real data
+* Test data from `data/pop_db_test.sql`
+
+### Test Coverage
+
+Generate a coverage report using [Coverage](https://coverage.readthedocs.io/):
+
+```bash
+coverage run -m pytest          # Run tests with coverage
+coverage report -m              # Display report in console
+coverage html                   # Generate HTML report
+```
+
+Open `coverage_report/index.html` in your browser.
+
+> 💡 The `.coveragerc` file allows you to customize Coverage settings
+
+---
+
+##  Logs
+
+### Configuration
+
+Logs are initialized in `src/utils/log_init.py` and configured via `logging_config.yml`.
+
+**To change the log level**: edit the `level` tag in `logging_config.yml`.
+
+### Log Decorator
+
+A decorator in `src/utils/log_decorator.py` automatically logs:
+
+* Input parameters
+* Output value
 
 
-## :arrow_forward: Continuous integration (CI)
+---
 
-The repository contains a `.github/workflow/main.yml' file.
+## 🔄 Continuous Integration
 
-When you *push* on GitHub, it triggers a pipeline that will perform the following steps:
+### GitHub Actions Pipeline
 
-- Creating a container from an Ubuntu (Linux) image
-  - In other words, it creates a virtual machine with just a Linux kernel.
-- Install Python
-- Install the required packages
-- Run the unit tests (only the service tests, as it's more complicated to run the dao tests)
-- Analyse the code with *pylint*
-  - If the score is less than 7.5, the step will fail
+The file `.github/workflows/ci.yml` automatically triggers a pipeline on each *push*, which:
 
-You can check how this pipeline is progressing on your repository's GitHub page, *Actions* tab.
+1. ✅ Creates an Ubuntu container
+2. ✅ Installs Python
+3. ✅ Installs dependencies
+4. ✅ Runs tests (services only)
+5. ✅ Analyses code with **pylint** (minimum score: 7.5/10)
+
+### Viewing Results
+
+Check the **Actions** tab on your GitHub repository to monitor the pipeline.
+
+---
+
+## 📁 Project Structure
+
+### Root Files
+
+| File               | Description                       |
+| ------------------ | --------------------------------- |
+| `README.md`        | Main project documentation        |
+| `LICENSE`          | License and usage conditions      |
+| `requirements.txt` | Python dependencies               |
+| `.env`             | Environment variables (to create) |
+
+### Configuration Files
+
+| File                       | Description                      |
+| -------------------------- | -------------------------------- |
+| `.github/workflows/ci.yml` | CI/CD pipeline configuration     |
+| `.vscode/settings.json`    | VSCode project-specific settings |
+| `.coveragerc`              | Test coverage configuration      |
+| `.gitignore`               | Git ignore files/folders         |
+| `logging_config.yml`       | Logging configuration            |
+
+### Folders
+
+| Folder  | Description                                     |
+| ------- | ----------------------------------------------- |
+| `data/` | SQL scripts and datasets                        |
+| `doc/`  | UML diagrams and documentation                  |
+| `src/`  | Source code organized in a layered architecture |
+
+### Source Code Organization (`src/`)
+
+```
+src/
+├── business_object/    # Domain entities
+├── dao/               # Data access
+├── service/           # Business logic
+├── view/              # User interface
+│   ├── accueil/
+│   ├── auth/
+│   ├── client/
+│   ├── administrateur/
+│   ├── consulter/
+│   ├── evenement/
+│   └── reservations/
+├── utils/             # Utilities (logs, security, etc.)
+├── tests/             # Unit tests
+└── main.py           # Application entry point
+```
+
+---
+
+##  Contributors
+
+Project developed as part of the ENSAI 2nd-year curriculum.
+
+---
+
+##  License
+
+See the [LICENSE](LICENSE) file for details.
+
+---
